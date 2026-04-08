@@ -3,15 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LOOI Robot - 智慧互動版</title>
+  <title>Looi Robot</title>
   <style>
     :root {
       --bg: #f6f7f9;
       --accent: #ff8a4b;
       --ink: #222;
-      --success: #4CAF50;
-      --warning: #FF9800;
-      --error: #F44336;
     }
     
     * {
@@ -99,6 +96,7 @@
       transition: all 0.3s ease;
     }
     
+    /* 移除 SVG 元素的描邊 */
     .face svg circle,
     .face svg ellipse,
     .face svg path {
@@ -109,7 +107,7 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      min-height: 0;
+      min-height: 0; /* 重要：讓 flex 容器可以收縮 */
       transition: all 0.3s ease;
       overflow: hidden;
     }
@@ -126,7 +124,7 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      min-height: 0;
+      min-height: 0; /* 重要：讓 flex 容器可以收縮 */
       overflow: hidden;
     }
     
@@ -226,7 +224,6 @@
       flex-direction: column;
       min-height: 0;
       overflow: hidden;
-      position: relative;
     }
     
     .feedback {
@@ -240,7 +237,6 @@
       font-size: 14px;
       line-height: 1.4;
       min-height: 80px;
-      max-height: 100%;
     }
     
     .device-status {
@@ -286,98 +282,7 @@
       font-size: 16px;
     }
     
-    /* 表情動畫系統 */
-    @keyframes happy-pulse {
-      0%, 100% { 
-        opacity: 0.8;
-        transform: scale(1);
-      }
-      50% { 
-        opacity: 1;
-        transform: scale(1.1);
-      }
-    }
-    
-    @keyframes sad-pulse {
-      0%, 100% { 
-        opacity: 0.7;
-        transform: scale(1) translateY(0);
-      }
-      50% { 
-        opacity: 0.9;
-        transform: scale(0.95) translateY(2px);
-      }
-    }
-    
-    @keyframes surprised-pulse {
-      0%, 100% { 
-        opacity: 0.8;
-        transform: scale(1);
-      }
-      50% { 
-        opacity: 1;
-        transform: scale(1.2);
-      }
-    }
-    
-    @keyframes angry-pulse {
-      0%, 100% { 
-        opacity: 0.8;
-        transform: scale(1);
-      }
-      25% { 
-        opacity: 1;
-        transform: scale(1.1) rotate(-5deg);
-      }
-      75% { 
-        opacity: 1;
-        transform: scale(1.1) rotate(5deg);
-      }
-    }
-    
-    @keyframes dizzy-rotate {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(1080deg); }
-    }
-    
-    @keyframes cheek-expand {
-      0%, 100% { 
-        transform: scale(1);
-        rx: 24;
-        ry: 14;
-      }
-      50% { 
-        transform: scale(1.3);
-        rx: 30;
-        ry: 18;
-      }
-    }
-    
-    .expression-happy {
-      animation: happy-pulse 2s ease-in-out infinite;
-    }
-    
-    .expression-sad {
-      animation: sad-pulse 2s ease-in-out infinite;
-    }
-    
-    .expression-surprised {
-      animation: surprised-pulse 0.8s ease-in-out;
-    }
-    
-    .expression-angry {
-      animation: angry-pulse 0.5s ease-in-out infinite;
-    }
-    
-    .expression-dizzy {
-      animation: dizzy-rotate 2s linear;
-    }
-    
-    .cheek-expand {
-      animation: cheek-expand 0.5s ease-in-out;
-    }
-    
-    /* 臉頰動畫 */
+    /* 臉頰紅暈動畫 */
     @keyframes blush-pulse {
       0%, 100% { 
         opacity: 0.7;
@@ -420,277 +325,80 @@
       animation: blush-pulse 2s ease-in-out;
     }
     
-    /* 設置面板樣式 */
-    .settings-panel {
-      background: white;
-      border-radius: 12px;
-      padding: 12px;
-      margin: 8px 0;
-      border: 1px solid #e9ecef;
-      display: none;
-    }
-    
-    .settings-panel.active {
-      display: block;
-    }
-    
-    .setting-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin: 8px 0;
-      padding: 6px 0;
-      border-bottom: 1px solid #f1f3f4;
-    }
-    
-    .setting-item:last-child {
-      border-bottom: none;
-    }
-    
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 44px;
-      height: 24px;
-    }
-    
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-    
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #ccc;
-      transition: .4s;
-      border-radius: 24px;
-    }
-    
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 18px;
-      width: 18px;
-      left: 3px;
-      bottom: 3px;
-      background-color: white;
-      transition: .4s;
-      border-radius: 50%;
-    }
-    
-    input:checked + .slider {
-      background-color: var(--accent);
-    }
-    
-    input:checked + .slider:before {
-      transform: translateX(20px);
-    }
-    
-    /* 記憶面板樣式 */
-    .memory-panel {
-      background: white;
-      border-radius: 12px;
-      padding: 12px;
-      margin: 8px 0;
-      border: 1px solid #e9ecef;
-      max-height: 200px;
-      overflow-y: auto;
-    }
-    
-    .memory-item {
-      padding: 6px 8px;
-      margin: 4px 0;
-      background: #f8f9fa;
-      border-radius: 6px;
-      border-left: 3px solid var(--accent);
-      font-size: 12px;
-    }
-    
-    .memory-item .timestamp {
-      font-size: 10px;
-      color: #666;
-      float: right;
-    }
-    
-    /* 通知系統 */
-    .notification {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 12px 16px;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      border-left: 4px solid var(--accent);
-      z-index: 1000;
-      transform: translateX(150%);
-      transition: transform 0.3s ease;
-      max-width: 300px;
-    }
-    
-    .notification.show {
-      transform: translateX(0);
-    }
-    
-    .notification.success {
-      border-left-color: var(--success);
-    }
-    
-    .notification.warning {
-      border-left-color: var(--warning);
-    }
-    
-    .notification.error {
-      border-left-color: var(--error);
-    }
-    
-    /* 互動控制樣式 */
-    .interaction-controls {
-      display: flex;
-      gap: 8px;
-      margin: 8px 0;
-      flex-wrap: wrap;
-      flex-shrink: 0;
-    }
-    
-    .interaction-btn {
-      background: #e3f2fd;
-      color: #1976d2;
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-size: 11px;
-      border: 1px solid #bbdefb;
-      cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
-    }
-    
-    .interaction-btn:hover {
-      background: #bbdefb;
-    }
-    
-    .camera-container {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    
-    .camera-container.active {
-      display: flex;
-    }
-    
-    .camera-view {
-      width: 90%;
-      max-width: 500px;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    
-    .camera-controls {
-      position: absolute;
-      bottom: 20px;
-      display: flex;
-      gap: 10px;
-    }
-    
-    .camera-btn {
-      padding: 10px 20px;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    
-    /* 5吋手機響應式優化 */
+    /* 響應式設計 - 5吋手機優化 */
     @media (max-width: 360px) and (max-height: 640px) {
       .container {
         padding: 5px;
         height: 100vh;
-        max-height: 100vh;
       }
       
       .header {
         margin-bottom: 5px;
-        padding: 2px 0;
       }
       
       h1 {
-        font-size: 16px;
+        font-size: 18px;
       }
       
       .face-container {
-        min-height: 120px;
-        max-height: 140px;
-        margin-bottom: 5px;
+        min-height: 140px;
+        max-height: 160px;
       }
       
       .face {
         max-width: 280px;
-        height: 120px;
+        height: 140px;
       }
       
       .card {
-        padding: 6px;
-        flex: 1;
-        min-height: 0;
+        padding: 8px;
       }
       
       .btn {
-        padding: 4px 6px;
-        font-size: 10px;
-        gap: 2px;
+        padding: 5px 8px;
+        font-size: 11px;
       }
       
       textarea {
-        min-height: 40px;
-        max-height: 60px;
-        font-size: 12px;
+        min-height: 50px;
+        max-height: 70px;
+        font-size: 13px;
         padding: 6px;
       }
       
       .quick-command {
         padding: 3px 6px;
-        font-size: 9px;
+        font-size: 10px;
       }
       
       .feedback {
-        padding: 6px;
-        font-size: 12px;
-        min-height: 60px;
-        line-height: 1.3;
+        padding: 8px;
+        font-size: 13px;
+        min-height: 70px;
       }
       
       .toggle-controls {
-        width: 20px;
-        height: 20px;
-        font-size: 9px;
-        top: 5px;
-        right: 5px;
+        width: 22px;
+        height: 22px;
+        font-size: 10px;
+      }
+    }
+    
+    /* 橫向模式優化 */
+    @media (max-height: 400px) {
+      .face-container {
+        min-height: 120px;
+        max-height: 140px;
       }
       
-      .interaction-btn {
-        padding: 4px 6px;
-        font-size: 9px;
+      .face {
+        max-width: 240px;
+        height: 120px;
       }
       
-      .interaction-controls {
-        gap: 4px;
-        margin: 6px 0;
+      .feedback {
+        min-height: 60px;
+        font-size: 12px;
       }
     }
   </style>
@@ -698,7 +406,7 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>LOOI Robot - 智慧互動版</h1>
+      <h1>Looi Robot</h1>
     </div>
     
     <div class="face-container">
@@ -707,24 +415,42 @@
       <div class="face card">
         <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
           <defs>
+            <!-- 柔化濾鏡 -->
             <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="2" result="b"/>
               <feBlend in="SourceGraphic" in2="b" mode="normal"/>
             </filter>
           </defs>
           
+          <!-- 臉部背景 -->
           <rect x="0" y="0" width="320" height="200" rx="18" fill="#fff" stroke="#f0f0f0" />
+          
+          <!-- 眉毛 -->
+          <path d="M60 52 q40 -22 80 0" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M200 52 q40 -22 80 0" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round"/>
           
           <!-- 左眼 -->
           <g id="left-eye">
-            <circle cx="95" cy="110" r="32" fill="#fff" />
+            <circle cx="95" cy="110" r="32" fill="#fff" stroke="#222" stroke-width="2" />
             <circle id="lpupil" cx="95" cy="110" r="14" fill="#111" />
+            <!-- 瞳孔內的裝飾條 -->
+            <g transform="translate(85,100) scale(.5)" fill="#111">
+              <rect x="4" y="10" width="4" height="12" rx="1" />
+              <rect x="10" y="6" width="4" height="16" rx="1" />
+              <rect x="16" y="2" width="4" height="20" rx="1" />
+            </g>
           </g>
           
           <!-- 右眼 -->
           <g id="right-eye">
-            <circle cx="225" cy="110" r="32" fill="#fff" />
+            <circle cx="225" cy="110" r="32" fill="#fff" stroke="#222" stroke-width="2" />
             <circle id="rpupil" cx="225" cy="110" r="14" fill="#111" />
+            <!-- 瞳孔內的裝飾條 -->
+            <g transform="translate(215,100) scale(.5)" fill="#111">
+              <rect x="4" y="10" width="4" height="12" rx="1" />
+              <rect x="10" y="6" width="4" height="16" rx="1" />
+              <rect x="16" y="2" width="4" height="20" rx="1" />
+            </g>
           </g>
           
           <!-- 臉頰 - 左側 -->
@@ -738,75 +464,12 @@
     
     <div class="controls-container">
       <div class="card">
-        <!-- 互動控制 -->
-        <div class="interaction-controls">
-          <div class="interaction-btn" data-interaction="motion">👋 動作偵測模式</div>
-          <div class="interaction-btn" data-interaction="stop">⏹️ 停止偵測</div>
-        </div>
-        
-        <!-- 設置面板 -->
-        <div class="settings-panel" id="settingsPanel">
-          <div class="setting-item">
-            <span>語音回饋</span>
-            <label class="switch">
-              <input type="checkbox" id="voiceFeedback" checked>
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div class="setting-item">
-            <span>眼球追蹤</span>
-            <label class="switch">
-              <input type="checkbox" id="eyeTracking" checked>
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div class="setting-item">
-            <span>記憶功能</span>
-            <label class="switch">
-              <input type="checkbox" id="memoryEnabled" checked>
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div class="setting-item">
-            <span>動作偵測</span>
-            <label class="switch">
-              <input type="checkbox" id="motionDetection" checked>
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div class="setting-item">
-            <span>手勢識別</span>
-            <label class="switch">
-              <input type="checkbox" id="gestureEnabled" checked>
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div class="setting-item">
-            <span>搖晃偵測</span>
-            <label class="switch">
-              <input type="checkbox" id="shakeDetection" checked>
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div class="setting-item">
-            <button class="btn secondary" id="exportData">📥 匯出資料</button>
-            <button class="btn secondary" id="importData">📤 匯入資料</button>
-          </div>
-        </div>
-        
-        <!-- 記憶面板 -->
-        <div class="memory-panel" id="memoryPanel">
-          <div style="font-size: 12px; font-weight: bold; margin-bottom: 8px;">記憶項目</div>
-          <div id="memoryList"></div>
-        </div>
-        
         <div class="input-section">
           <div class="input-header">
             <strong>輸入訊息（語音或文字）</strong>
             <div>
               <button id="recBtn" class="btn">🎙️ 語音</button>
               <button id="stopRecBtn" class="btn secondary">■ 停止</button>
-              <button id="settingsBtn" class="btn secondary">⚙️ 設定</button>
             </div>
           </div>
           
@@ -817,13 +480,11 @@
             <div class="quick-command" data-command="greeting">您好</div>
             <div class="quick-command" data-command="introduction">介紹一下</div>
             <div class="quick-command" data-command="chatgpt">問問 GPT</div>
-            <div class="quick-command" data-command="memory">查看記憶</div>
           </div>
           
           <div class="action-buttons">
             <button id="sendBtn" class="btn">送出</button>
             <button id="speakBtn" class="btn secondary">🔊 播放</button>
-            <button id="clearBtn" class="btn secondary">🗑️ 清除</button>
             <div style="flex: 1; text-align: right;" class="meta">
               語音：<span id="recStatus">未啟動</span>
             </div>
@@ -838,7 +499,6 @@
         
         <div class="device-status" id="deviceStatus">
           設備方向: <span id="orientationStatus">等待檢測</span>
-          <span id="motionStatus" style="margin-left: 10px;">動作: 等待偵測</span>
         </div>
         
         <footer>
@@ -848,464 +508,7 @@
     </div>
   </div>
 
-  <!-- 相機容器 -->
-  <div class="camera-container" id="cameraContainer">
-    <div style="position: relative;">
-      <video id="cameraView" class="camera-view" autoplay playsinline></video>
-      <canvas id="motionCanvas" style="display: none;"></canvas>
-      <div class="camera-controls">
-        <button class="camera-btn" id="closeCameraBtn">❌ 關閉相機</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 通知容器 -->
-  <div id="notificationContainer"></div>
-
-  <!-- 隱藏的檔案輸入元素，用於匯入資料 -->
-  <input type="file" id="importFile" accept=".json" style="display: none;">
-
   <script>
-    // --- 記憶系統 ---
-    const memorySystem = {
-      memories: JSON.parse(localStorage.getItem('looi_memories')) || [],
-      
-      addMemory: function(text, type = 'conversation') {
-        const memory = {
-          id: Date.now(),
-          text: text,
-          type: type,
-          timestamp: new Date().toISOString(),
-          keywords: extractKeywords(text, 3)
-        };
-        
-        this.memories.unshift(memory);
-        if (this.memories.length > 50) {
-          this.memories = this.memories.slice(0, 50);
-        }
-        
-        this.saveToLocalStorage();
-        this.updateMemoryDisplay();
-        
-        return memory;
-      },
-      
-      findRelatedMemories: function(text) {
-        const keywords = extractKeywords(text, 3);
-        if (keywords.length === 0) return [];
-        
-        return this.memories.filter(memory => {
-          return keywords.some(keyword => 
-            memory.text.toLowerCase().includes(keyword) || 
-            memory.keywords.includes(keyword)
-          );
-        }).slice(0, 3);
-      },
-      
-      saveToLocalStorage: function() {
-        try {
-          localStorage.setItem('looi_memories', JSON.stringify(this.memories));
-        } catch (e) {
-          console.error('保存記憶到本地存儲失敗:', e);
-          showNotification('保存記憶失敗，本地存儲空間可能已滿', 'error');
-        }
-      },
-      
-      updateMemoryDisplay: function() {
-        const memoryList = document.getElementById('memoryList');
-        if (!memoryList) return;
-        
-        if (this.memories.length === 0) {
-          memoryList.innerHTML = '<div class="memory-item">暫無記憶項目</div>';
-          return;
-        }
-        
-        memoryList.innerHTML = this.memories.slice(0, 5).map(memory => {
-          const date = new Date(memory.timestamp);
-          const timeString = date.toLocaleTimeString('zh-TW', { 
-            hour: '2-digit', 
-            minute: '2-digit'
-          });
-          
-          return `
-            <div class="memory-item">
-              ${memory.text}
-              <span class="timestamp">${timeString}</span>
-            </div>
-          `;
-        }).join('');
-      },
-      
-      exportData: function() {
-        const data = {
-          memories: this.memories,
-          exportDate: new Date().toISOString(),
-          version: '1.0'
-        };
-        
-        const dataStr = JSON.stringify(data, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        
-        const url = URL.createObjectURL(dataBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `looi_memory_${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        
-        showNotification('記憶資料匯出成功', 'success');
-      },
-      
-      importData: function(file) {
-        const reader = new FileReader();
-        
-        reader.onload = (e) => {
-          try {
-            const data = JSON.parse(e.target.result);
-            
-            if (data.memories && Array.isArray(data.memories)) {
-              this.memories = [...data.memories, ...this.memories].slice(0, 50);
-              this.saveToLocalStorage();
-              this.updateMemoryDisplay();
-              showNotification('記憶資料匯入成功', 'success');
-            } else {
-              throw new Error('無效的資料格式');
-            }
-          } catch (error) {
-            console.error('匯入資料失敗:', error);
-            showNotification('匯入失敗：檔案格式不正確', 'error');
-          }
-        };
-        
-        reader.readAsText(file);
-      }
-    };
-
-    // --- 通知系統 ---
-    function showNotification(message, type = 'info') {
-      const container = document.getElementById('notificationContainer');
-      const id = 'notification-' + Date.now();
-      
-      const notification = document.createElement('div');
-      notification.id = id;
-      notification.className = `notification ${type}`;
-      notification.innerHTML = `
-        <div style="font-size: 14px; font-weight: 500;">${message}</div>
-      `;
-      
-      container.appendChild(notification);
-      
-      setTimeout(() => notification.classList.add('show'), 10);
-      
-      setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => {
-          if (notification.parentNode) {
-            notification.parentNode.removeChild(notification);
-          }
-        }, 300);
-      }, 3000);
-    }
-
-    // --- 表情系統 ---
-    const expressionSystem = {
-      setExpression: function(expression) {
-        const face = document.querySelector('.face');
-        const leftBlush = document.getElementById('left-blush');
-        const rightBlush = document.getElementById('right-blush');
-        
-        // 移除所有表情類別
-        face.classList.remove('expression-happy', 'expression-sad', 'expression-surprised', 'expression-angry');
-        
-        switch(expression) {
-          case 'happy':
-            face.classList.add('expression-happy');
-            leftBlush.setAttribute('opacity', '0.9');
-            rightBlush.setAttribute('opacity', '0.9');
-            break;
-            
-          case 'sad':
-            face.classList.add('expression-sad');
-            leftBlush.setAttribute('opacity', '0.5');
-            rightBlush.setAttribute('opacity', '0.5');
-            break;
-            
-          case 'surprised':
-            face.classList.add('expression-surprised');
-            leftBlush.setAttribute('opacity', '1');
-            rightBlush.setAttribute('opacity', '1');
-            break;
-            
-          case 'angry':
-            face.classList.add('expression-angry');
-            leftBlush.setAttribute('fill', '#ff4444');
-            rightBlush.setAttribute('fill', '#ff4444');
-            leftBlush.setAttribute('opacity', '0.9');
-            rightBlush.setAttribute('opacity', '0.9');
-            break;
-            
-          case 'normal':
-          default:
-            leftBlush.setAttribute('fill', '#ff8a4b');
-            rightBlush.setAttribute('fill', '#ff8a4b');
-            leftBlush.setAttribute('opacity', '0.7');
-            rightBlush.setAttribute('opacity', '0.7');
-            break;
-        }
-        
-        triggerBlushAnimation();
-      },
-      
-      randomExpression: function() {
-        const expressions = ['happy', 'sad', 'surprised', 'normal'];
-        const randomExpression = expressions[Math.floor(Math.random() * expressions.length)];
-        this.setExpression(randomExpression);
-        
-        setTimeout(() => {
-          this.setExpression('normal');
-        }, 5000 + Math.random() * 10000);
-      }
-    };
-
-    // --- 動作偵測系統 ---
-    const motionDetectionSystem = {
-      isEnabled: true,
-      cameraStream: null,
-      isMotionActive: false,
-      lastFrame: null,
-      motionThreshold: 50,
-      greetingCooldown: 0,
-      
-      startMotionDetection: async function() {
-        try {
-          this.cameraStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
-              width: 320, 
-              height: 240,
-              facingMode: 'user'
-            } 
-          });
-          
-          const cameraView = document.getElementById('cameraView');
-          cameraView.srcObject = this.cameraStream;
-          document.getElementById('cameraContainer').classList.add('active');
-          this.isMotionActive = true;
-          
-          // 開始動作偵測
-          this.detectMotion();
-          
-          showNotification('動作偵測已啟動，請在鏡頭前揮手', 'success');
-          speakText('我現在可以偵測動作了，對我揮揮手吧！');
-          
-        } catch (error) {
-          console.error('無法開啟相機:', error);
-          showNotification('無法開啟相機，請檢查權限設定', 'error');
-        }
-      },
-      
-      stopMotionDetection: function() {
-        if (this.cameraStream) {
-          this.cameraStream.getTracks().forEach(track => track.stop());
-          this.cameraStream = null;
-        }
-        document.getElementById('cameraContainer').classList.remove('active');
-        this.isMotionActive = false;
-        this.lastFrame = null;
-        
-        showNotification('動作偵測已停止', 'info');
-        speakText('動作偵測關閉了');
-      },
-      
-      detectMotion: function() {
-        if (!this.isMotionActive) return;
-        
-        const cameraView = document.getElementById('cameraView');
-        const motionCanvas = document.getElementById('motionCanvas');
-        const context = motionCanvas.getContext('2d');
-        
-        motionCanvas.width = cameraView.videoWidth;
-        motionCanvas.height = cameraView.videoHeight;
-        
-        context.drawImage(cameraView, 0, 0, motionCanvas.width, motionCanvas.height);
-        const currentFrame = context.getImageData(0, 0, motionCanvas.width, motionCanvas.height);
-        
-        if (this.lastFrame) {
-          const motion = this.calculateMotion(this.lastFrame, currentFrame);
-          this.updateMotionStatus(motion);
-          
-          if (motion > this.motionThreshold && this.greetingCooldown <= 0) {
-            this.triggerGreeting();
-            this.greetingCooldown = 300; // 5秒冷卻
-          }
-        }
-        
-        this.lastFrame = currentFrame;
-        this.greetingCooldown = Math.max(0, this.greetingCooldown - 1);
-        
-        if (this.isMotionActive) {
-          requestAnimationFrame(() => this.detectMotion());
-        }
-      },
-      
-      calculateMotion: function(frame1, frame2) {
-        let diff = 0;
-        for (let i = 0; i < frame1.data.length; i += 4) {
-          const pixelDiff = Math.abs(frame1.data[i] - frame2.data[i]) +
-                           Math.abs(frame1.data[i + 1] - frame2.data[i + 1]) +
-                           Math.abs(frame1.data[i + 2] - frame2.data[i + 2]);
-          diff += pixelDiff;
-        }
-        return diff / (frame1.width * frame1.height * 3);
-      },
-      
-      updateMotionStatus: function(motionLevel) {
-        const motionStatus = document.getElementById('motionStatus');
-        const level = Math.min(100, Math.round(motionLevel));
-        motionStatus.textContent = `動作: ${level}%`;
-        
-        if (level > 50) {
-          motionStatus.style.color = '#ff4444';
-        } else if (level > 20) {
-          motionStatus.style.color = '#ff8a4b';
-        } else {
-          motionStatus.style.color = '#0066cc';
-        }
-      },
-      
-      triggerGreeting: function() {
-        const greetings = [
-          '嗨！看到你了！',
-          '你好啊！',
-          '哇！有人在那裡！',
-          '嗨嗨！注意到你了！'
-        ];
-        
-        const greeting = greetings[Math.floor(Math.random() * greetings.length)];
-        showNotification('👋 ' + greeting, 'success');
-        speakText(greeting);
-        expressionSystem.setExpression('surprised');
-        
-        setTimeout(() => {
-          expressionSystem.setExpression('normal');
-        }, 3000);
-      }
-    };
-
-    // --- 手勢識別系統 ---
-    const gestureRecognitionSystem = {
-      isEnabled: true,
-      
-      detectGesture: function() {
-        // 簡化的手勢偵測邏輯
-        const gestures = ['thumbsup', 'middlefinger', 'unknown'];
-        return gestures[Math.floor(Math.random() * gestures.length)];
-      },
-      
-      handleGesture: function(gesture) {
-        if (!document.getElementById('gestureEnabled').checked) return;
-        
-        switch(gesture) {
-          case 'thumbsup':
-            this.handleThumbsUp();
-            break;
-          case 'middlefinger':
-            this.handleMiddleFinger();
-            break;
-        }
-      },
-      
-      handleThumbsUp: function() {
-        showNotification('👍 偵測到比讚！好開心！', 'success');
-        speakText('謝謝你的讚！');
-        expressionSystem.setExpression('happy');
-      },
-      
-      handleMiddleFinger: function() {
-        showNotification('👎 偵測到不友善手勢！', 'warning');
-        speakText('這樣不禮貌喔！');
-        expressionSystem.setExpression('angry');
-        
-        const leftBlush = document.getElementById('left-blush');
-        const rightBlush = document.getElementById('right-blush');
-        
-        leftBlush.classList.add('cheek-expand');
-        rightBlush.classList.add('cheek-expand');
-        
-        setTimeout(() => {
-          leftBlush.classList.remove('cheek-expand');
-          rightBlush.classList.remove('cheek-expand');
-        }, 500);
-        
-        setTimeout(() => {
-          expressionSystem.setExpression('normal');
-        }, 5000);
-      }
-    };
-
-    // --- 手機搖晃偵測 ---
-    const shakeDetectionSystem = {
-      isEnabled: true,
-      lastAcceleration: { x: null, y: null, z: null },
-      shakeThreshold: 15,
-      isDizzy: false,
-      
-      init: function() {
-        if (window.DeviceMotionEvent) {
-          window.addEventListener('devicemotion', (event) => {
-            this.handleMotion(event);
-          });
-        }
-      },
-      
-      handleMotion: function(event) {
-        if (!document.getElementById('shakeDetection').checked) return;
-        if (this.isDizzy) return;
-        
-        const acceleration = event.accelerationIncludingGravity;
-        if (!acceleration) return;
-        
-        if (this.lastAcceleration.x !== null) {
-          const deltaX = Math.abs(acceleration.x - this.lastAcceleration.x);
-          const deltaY = Math.abs(acceleration.y - this.lastAcceleration.y);
-          const deltaZ = Math.abs(acceleration.z - this.lastAcceleration.z);
-          
-          const totalDelta = deltaX + deltaY + deltaZ;
-          
-          if (totalDelta > this.shakeThreshold) {
-            this.triggerDizzy();
-          }
-        }
-        
-        this.lastAcceleration = {
-          x: acceleration.x,
-          y: acceleration.y,
-          z: acceleration.z
-        };
-      },
-      
-      triggerDizzy: function() {
-        this.isDizzy = true;
-        
-        showNotification('🌀 偵測到劇烈搖晃！', 'warning');
-        speakText('好暈喔～不要再搖了！');
-        
-        const leftEye = document.getElementById('left-eye');
-        const rightEye = document.getElementById('right-eye');
-        
-        leftEye.classList.add('expression-dizzy');
-        rightEye.classList.add('expression-dizzy');
-        
-        setTimeout(() => {
-          leftEye.classList.remove('expression-dizzy');
-          rightEye.classList.remove('expression-dizzy');
-          this.isDizzy = false;
-          expressionSystem.setExpression('normal');
-        }, 3000);
-      }
-    };
-
     // --- 關鍵字提取功能 ---
     function extractKeywords(text, max=3) {
       if(!text) return [];
@@ -1337,26 +540,6 @@
       return chatgptKeywords.some(keyword => lowerText.includes(keyword));
     }
 
-    // --- 清理 GPT 相關字詞 ---
-    function cleanGPTQuery(text) {
-      if (!text) return '';
-      
-      const gptPatterns = [
-        /(請)?(幫我)?(問問|詢問|查詢)?\s*(gpt|chatgpt|openai|ai|人工智慧|智能助手|聊天機器人)/gi,
-        /(向)?\s*(gpt|chatgpt|openai|ai)\s*(詢問|提問|查詢)/gi,
-        /(幫我)?\s*問問\s*(gpt|ai)/gi
-      ];
-      
-      let cleanedText = text;
-      gptPatterns.forEach(pattern => {
-        cleanedText = cleanedText.replace(pattern, '').trim();
-      });
-      
-      cleanedText = cleanedText.replace(/^[，。！？、\s]+|[，。！？、\s]+$/g, '');
-      
-      return cleanedText || '你好';
-    }
-
     // --- UI 元素引用 ---
     const textIn = document.getElementById('textIn');
     const sendBtn = document.getElementById('sendBtn');
@@ -1368,21 +551,11 @@
     const recStatus = document.getElementById('recStatus');
     const orientationStatus = document.getElementById('orientationStatus');
     const toggleControls = document.getElementById('toggleControls');
-    const settingsBtn = document.getElementById('settingsBtn');
-    const closeCameraBtn = document.getElementById('closeCameraBtn');
+    const controlsContainer = document.querySelector('.controls-container');
+    const faceContainer = document.querySelector('.face-container');
     const container = document.querySelector('.container');
     const leftBlush = document.getElementById('left-blush');
     const rightBlush = document.getElementById('right-blush');
-    const lpupil = document.getElementById('lpupil');
-    const rpupil = document.getElementById('rpupil');
-
-    // --- 互動按鈕事件 ---
-    document.querySelectorAll('.interaction-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const interaction = this.dataset.interaction;
-        handleInteraction(interaction);
-      });
-    });
 
     // --- 快速指令處理 ---
     const quickCommands = document.querySelectorAll('.quick-command');
@@ -1405,7 +578,6 @@
             second: '2-digit'
           });
           reply = `現在時間是 ${timeString}`;
-          expressionSystem.setExpression('normal');
           break;
           
         case 'greeting':
@@ -1420,60 +592,46 @@
             greeting = '晚安';
           }
           
-          reply = `${greeting}！我是你的好朋友 Looi，很高興為你服務喔！`;
-          expressionSystem.setExpression('happy');
+          reply = `${greeting}！我是您的助理，很高興為您服務。`;
           break;
           
         case 'introduction':
-          reply = '嗨！我是 Looi，一個聰明的機器人朋友！我可以幫你找資料、回答問題，還可以偵測你的動作和手勢喔！';
-          expressionSystem.setExpression('happy');
+          reply = '我是一個智能助手。我可以幫您搜索信息、報時、回答問題，並通過語音與您互動。請告訴我您需要什麼幫助！';
           break;
           
         case 'chatgpt':
-          reply = '好喔！我幫你問問聰明的 GPT 助手！請告訴我你想問什麼問題呢？';
-          textIn.placeholder = '請輸入你想問 GPT 的問題...';
-          expressionSystem.setExpression('surprised');
-          break;
-          
-        case 'memory':
-          memorySystem.updateMemoryDisplay();
-          reply = '這是你最近跟我說過的話喔！';
-          expressionSystem.setExpression('normal');
+          reply = '我注意到您想使用 ChatGPT。請在輸入框中輸入您的問題，我會幫您開啟 ChatGPT 來回答。';
+          textIn.placeholder = '請輸入您想問 ChatGPT 的問題...';
           break;
       }
       
       robotReply.textContent = reply;
       robotReply.dataset.text = reply;
       
+      // 觸發臉頰動畫
       triggerBlushAnimation();
       speakText(reply);
     }
 
-    function handleInteraction(interaction) {
-      switch(interaction) {
-        case 'motion':
-          motionDetectionSystem.startMotionDetection();
-          break;
-        case 'stop':
-          motionDetectionSystem.stopMotionDetection();
-          break;
-      }
-    }
-
     // --- 臉頰紅暈動畫功能 ---
     function triggerBlushAnimation() {
+      // 移除之前的動畫類
       leftBlush.classList.remove('blush-animation', 'blush-pulse-animation');
       rightBlush.classList.remove('blush-animation', 'blush-pulse-animation');
       
+      // 觸發重新渲染
       void leftBlush.offsetWidth;
       void rightBlush.offsetWidth;
       
+      // 隨機選擇一種臉頰動畫
       const animations = ['blush-animation', 'blush-pulse-animation'];
       const randomAnimation = animations[Math.floor(Math.random() * animations.length)];
       
+      // 添加動畫類
       leftBlush.classList.add(randomAnimation);
       rightBlush.classList.add(randomAnimation);
       
+      // 動畫結束後移除類
       setTimeout(() => {
         leftBlush.classList.remove(randomAnimation);
         rightBlush.classList.remove(randomAnimation);
@@ -1483,22 +641,15 @@
     // --- 事件監聽器 ---
     sendBtn.addEventListener('click', () => {
       handleSend(textIn.value);
+      // 觸發臉頰動畫
       triggerBlushAnimation();
     });
 
     speakBtn.addEventListener('click', () => {
       const txt = robotReply.dataset.text || robotReply.textContent;
       speakText(txt);
+      // 觸發臉頰動畫
       triggerBlushAnimation();
-    });
-
-    settingsBtn.addEventListener('click', () => {
-      const settingsPanel = document.getElementById('settingsPanel');
-      settingsPanel.classList.toggle('active');
-    });
-
-    closeCameraBtn.addEventListener('click', () => {
-      motionDetectionSystem.stopMotionDetection();
     });
 
     // 控制面板摺疊功能
@@ -1531,10 +682,11 @@
       raw = (raw || '').trim();
       
       if(!raw) {
-        robotReply.textContent = '請先輸入或用語音輸入一段文字喔！'; 
+        robotReply.textContent = '請先輸入或用語音輸入一段文字。'; 
         return;
       }
       
+      // 檢查是否為特殊指令
       if (raw.includes('現在幾點') || raw.includes('報時') || raw.includes('時間')) {
         handleQuickCommand('time');
         return;
@@ -1544,56 +696,37 @@
       } else if (raw.includes('介紹') || raw.includes('你是誰') || raw.includes('功能')) {
         handleQuickCommand('introduction');
         return;
-      } else if (raw.includes('記憶') || raw.includes('記住') || raw.includes('記得')) {
-        memorySystem.addMemory(raw, 'user_input');
-        robotReply.textContent = '我記住你說的話了！';
-        robotReply.dataset.text = '我記住你說的話了！';
-        speakText('好喔，我記住了！');
-        expressionSystem.setExpression('happy');
-        return;
       }
       
+      // 檢查是否為 ChatGPT 相關查詢
       if (isChatGPTQuery(raw)) {
-        const cleanedQuery = cleanGPTQuery(raw);
-        robotReply.textContent = '好喔！我幫你問問聰明的 GPT 助手！';
-        expressionSystem.setExpression('surprised');
+        robotReply.textContent = '偵測到 ChatGPT 相關查詢，正在為您開啟 ChatGPT...';
         
-        const chatGPTUrl = 'https://chat.openai.com/?q=' + encodeURIComponent(cleanedQuery);
+        // 開啟 ChatGPT
+        const chatGPTUrl = 'https://chat.openai.com/?q=' + encodeURIComponent(raw);
         
         setTimeout(() => {
           window.open(chatGPTUrl, '_blank');
-          speakText('幫你打開 GPT 了，在新頁面裡問問題吧！');
+          speakText('幫您聯絡GPT了，請在新分頁中點選送出，並查閱它的回應');
         }, 1000);
         
         return;
       }
       
-      robotReply.textContent = '讓我想一想喔...';
-      expressionSystem.setExpression('normal');
-      
-      if (document.getElementById('memoryEnabled').checked) {
-        const relatedMemories = memorySystem.findRelatedMemories(raw);
-        if (relatedMemories.length > 0) {
-          const memoryText = relatedMemories[0].text;
-          robotReply.textContent += `\n\n[我記得你說過]：${memoryText}`;
-        }
-      }
+      robotReply.textContent = '分析中…';
       
       const keys = extractKeywords(raw, 4);
       updateKeywordsView(keys);
       
       const query = keys.length ? keys.join(' ') : raw.split('\n').slice(0,6).join(' ');
-      const reply = `我聽到你說：${keys.length ? keys.join(', ') : '(我沒聽清楚)'}。讓我幫你找找資料：${query}`;
+      const reply = `我聽到您說：${keys.length ? keys.join(', ') : '(無)'}。這是GOOGLE找到的結果：${query}`;
       
       robotReply.textContent = reply; 
       robotReply.dataset.text = reply;
       
+      // 觸發臉頰動畫
       triggerBlushAnimation();
       speakText(reply);
-      
-      if (document.getElementById('memoryEnabled').checked) {
-        memorySystem.addMemory(raw, 'conversation');
-      }
       
       const url = 'https://www.google.com/search?q=' + encodeURIComponent(query);
       
@@ -1605,40 +738,23 @@
     // --- 語音合成功能 ---
     function speakText(text) {
       if(!('speechSynthesis' in window)) return;
-      if (!document.getElementById('voiceFeedback').checked) return;
       
       window.speechSynthesis.cancel();
       
       const u = new SpeechSynthesisUtterance(text);
-      
-      u.rate = 1.1;
-      u.pitch = 1.4;
-      u.volume = 0.9;
-      
       const voices = window.speechSynthesis.getVoices();
+      const zh = voices.find(v => /zh|taiwan|mandarin/i.test(v.lang));
+      if(zh) u.voice = zh;
       
-      let voice = voices.find(v => 
-        v.lang.includes('zh') && (
-          v.name.toLowerCase().includes('child') ||
-          v.name.toLowerCase().includes('kids') ||
-          v.name.toLowerCase().includes('high')
-        )
-      );
-      
-      if (!voice) {
-        voice = voices.find(v => 
-          v.lang.includes('zh-TW') || 
-          v.lang.includes('zh-CN') ||
-          v.lang.includes('zh-HK')
-        );
-      }
-      
-      if (voice) u.voice = voice;
-      
+      u.rate = 1; 
+      u.pitch = 1;
       window.speechSynthesis.speak(u);
     }
 
     // --- 眼球跟隨鼠標動畫 ---
+    const lpupil = document.getElementById('lpupil');
+    const rpupil = document.getElementById('rpupil');
+    
     let faceRect = {x:0, y:0, w:320, h:200};
     
     function updateFaceRect() {
@@ -1651,8 +767,6 @@
     window.addEventListener('resize', updateFaceRect);
     
     document.addEventListener('mousemove', e => {
-      if (!document.getElementById('eyeTracking').checked) return;
-      
       const cx = e.clientX, cy = e.clientY;
       
       const left = {x:95, y:110};
@@ -1686,40 +800,54 @@
       rpupil.setAttribute('cy', 110 + (r.ny / faceRect.h * 40));
     });
 
-    // --- 設備方向檢測 ---
+    // --- 設備方向檢測 (手機水平旋轉) ---
     let isDeviceOrientationSupported = false;
+    let lastGamma = 0;
+    let lastBeta = 0;
 
     function updatePupilsByOrientation(gamma, beta) {
-      if (!document.getElementById('eyeTracking').checked) return;
+      // gamma: 左右傾斜 (-90 到 90)
+      // beta: 前後傾斜 (-180 到 180)
       
+      // 限制gamma值範圍
       gamma = Math.max(-90, Math.min(90, gamma));
       
+      // 計算眼球水平偏移量
       const maxHorizontalOffset = 10;
       const horizontalOffset = (gamma / 90) * maxHorizontalOffset;
       
+      // 計算眼球垂直偏移量
       const maxVerticalOffset = 6;
       let verticalOffset = 0;
       
+      // 根據前後傾斜調整垂直位置
       if (beta > 45) {
+        // 手機向前傾斜（螢幕朝下）
         verticalOffset = maxVerticalOffset;
       } else if (beta < -45) {
+        // 手機向後傾斜（螢幕朝上）
         verticalOffset = -maxVerticalOffset;
       }
       
+      // 更新眼球位置
       lpupil.setAttribute('cx', 95 - horizontalOffset);
       lpupil.setAttribute('cy', 110 + verticalOffset);
       rpupil.setAttribute('cx', 225 - horizontalOffset);
       rpupil.setAttribute('cy', 110 + verticalOffset);
       
+      // 更新狀態顯示
       orientationStatus.textContent = `水平: ${gamma.toFixed(1)}° | 垂直: ${beta.toFixed(1)}°`;
     }
 
+    // 檢查設備是否支援方向檢測
     if (window.DeviceOrientationEvent) {
       isDeviceOrientationSupported = true;
       orientationStatus.textContent = '設備方向檢測已啟用';
       
       window.addEventListener('deviceorientation', (event) => {
         if (event.gamma !== null && event.beta !== null) {
+          lastGamma = event.gamma;
+          lastBeta = event.beta;
           updatePupilsByOrientation(event.gamma, event.beta);
         }
       });
@@ -1742,19 +870,18 @@
       recognition.onstart = () => {
         recognizing = true; 
         recStatus.textContent = '聆聽中…';
-        expressionSystem.setExpression('surprised');
+        // 語音辨識開始時觸發臉頰動畫
+        triggerBlushAnimation();
       };
       
       recognition.onend = () => {
         recognizing = false; 
         recStatus.textContent = '已停止';
-        expressionSystem.setExpression('normal');
       };
       
       recognition.onerror = (e) => {
         console.warn('rec error', e); 
         recStatus.textContent = '辨識發生錯誤';
-        expressionSystem.setExpression('sad');
       };
       
       let finalTranscript = '';
@@ -1771,6 +898,7 @@
         
         textIn.value = (finalTranscript + interim).trim();
         
+        // 語音辨識過程中隨機觸發臉頰動畫
         if (Math.random() > 0.7) {
           triggerBlushAnimation();
         }
@@ -1808,65 +936,15 @@
       }
     });
 
-    // --- 初始化功能 ---
-    function initializeEnhancedFeatures() {
-      memorySystem.updateMemoryDisplay();
-      
-      // 初始化系統設定
-      const motionDetection = document.getElementById('motionDetection');
-      const gestureEnabled = document.getElementById('gestureEnabled');
-      const shakeDetection = document.getElementById('shakeDetection');
-      
-      motionDetectionSystem.isEnabled = motionDetection.checked;
-      gestureRecognitionSystem.isEnabled = gestureEnabled.checked;
-      shakeDetectionSystem.isEnabled = shakeDetection.checked;
-      
-      motionDetection.addEventListener('change', function() {
-        motionDetectionSystem.isEnabled = this.checked;
-        if (!this.checked) {
-          motionDetectionSystem.stopMotionDetection();
-        }
-      });
-      
-      gestureEnabled.addEventListener('change', function() {
-        gestureRecognitionSystem.isEnabled = this.checked;
-      });
-      
-      shakeDetection.addEventListener('change', function() {
-        shakeDetectionSystem.isEnabled = this.checked;
-      });
-      
-      // 初始化搖晃偵測
-      shakeDetectionSystem.init();
-      
-      setInterval(() => {
-        if (Math.random() > 0.7) {
-          expressionSystem.randomExpression();
-        }
-      }, 15000);
-      
-      document.getElementById('exportData').addEventListener('click', () => {
-        memorySystem.exportData();
-      });
-      
-      document.getElementById('importData').addEventListener('click', () => {
-        document.getElementById('importFile').click();
-      });
-      
-      document.getElementById('importFile').addEventListener('change', (e) => {
-        if (e.target.files.length > 0) {
-          memorySystem.importData(e.target.files[0]);
-          e.target.value = '';
-        }
-      });
-      
-      document.getElementById('clearBtn').addEventListener('click', () => {
-        textIn.value = '';
-        robotReply.textContent = '機器人等待使用者輸入...';
-        keywordsEl.innerHTML = '';
-        expressionSystem.setExpression('normal');
-      });
-    }
+    // --- 無障礙功能 ---
+    (function announceOpenHook() {
+      const orig = window.open;
+      window.open = function(url, name, features) {
+        const msg = `已為您開啟搜尋結果頁面。`;
+        speakText(msg);
+        return orig.call(window, url, name, features);
+      };
+    })();
 
     // 定期臉頰動畫
     setInterval(() => {
@@ -1875,17 +953,6 @@
         triggerBlushAnimation();
       }
     }, 8000);
-
-    // --- 頁面載入完成後初始化 ---
-    document.addEventListener('DOMContentLoaded', function() {
-      initializeEnhancedFeatures();
-      
-      setTimeout(() => {
-        showNotification('LOOI 智慧互動版已準備完成！', 'success');
-        expressionSystem.setExpression('happy');
-        speakText('嗨！我是 Looi，現在我可以偵測你的動作、手勢，還能感應手機搖晃喔！');
-      }, 1000);
-    });
   </script>
 </body>
 </html>
