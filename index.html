@@ -1,853 +1,1891 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>miniLooi — AI Agent</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --bg: #f5f3ef;
-  --white: #ffffff;
-  --ink: #2b2b2b;
-  --ink2: #6b6b6b;
-  --ink3: #b0aba3;
-  --pink: #f4b8c1;
-  --pink2: #f9d5d9;
-  --blush: #fce8ea;
-  --border: #e8e3dc;
-  --border2: #d4cec6;
-  --accent: #2b2b2b;
-  --shadow: 0 2px 16px rgba(0,0,0,0.06);
-  --shadow2: 0 8px 40px rgba(0,0,0,0.10);
-}
-
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: var(--bg);
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.app {
-  width: 100%;
-  max-width: 420px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* ── FACE CARD ── */
-.face-card {
-  background: var(--white);
-  border-radius: 28px;
-  padding: 32px 24px 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  box-shadow: var(--shadow);
-  cursor: pointer;
-  transition: box-shadow 0.25s, transform 0.2s;
-  user-select: none;
-  position: relative;
-  overflow: hidden;
-}
-.face-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--pink) 0%, #f8c8b0 50%, var(--pink) 100%);
-  opacity: 0.7;
-}
-.face-card:hover { box-shadow: var(--shadow2); transform: translateY(-1px); }
-.face-card:active { transform: scale(0.99); }
-
-.face-name {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink3);
-  font-family: 'DM Mono', monospace;
-}
-
-/* ── SVG FACE ── */
-#agentFace { overflow: visible; }
-
-/* blink */
-@keyframes blink {
-  0%,88%,100% { ry: 14; }
-  93% { ry: 1; }
-}
-.eye-ellipse { animation: blink 5s infinite ease-in-out; }
-.eye-ellipse-r { animation: blink 5s 0.3s infinite ease-in-out; }
-
-/* talking bounce */
-@keyframes mouthTalk {
-  0%,100% { d: path("M108 168 Q128 178 148 168"); }
-  50%      { d: path("M108 168 Q128 185 148 168"); }
-}
-
-.mood-tag {
-  font-size: 11px;
-  font-family: 'DM Mono', monospace;
-  color: var(--ink3);
-  background: var(--blush);
-  border-radius: 20px;
-  padding: 3px 12px;
-  letter-spacing: 0.04em;
-}
-
-/* ── CONTROL PANEL ── */
-.panel {
-  background: var(--white);
-  border-radius: 20px;
-  padding: 16px;
-  box-shadow: var(--shadow);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.panel-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.row-label {
-  font-size: 10px;
-  font-family: 'DM Mono', monospace;
-  color: var(--ink3);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  min-width: 48px;
-}
-
-/* Select */
-.sel {
-  flex: 1;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: var(--ink);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 13px;
-  font-weight: 400;
-  padding: 7px 10px;
-  outline: none;
-  cursor: pointer;
-  transition: border-color 0.2s;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23b0aba3' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  padding-right: 28px;
-}
-.sel:focus { border-color: var(--ink2); }
-.sel option { background: #fff; color: var(--ink); }
-.sel optgroup { color: var(--ink3); font-size: 11px; }
-
-/* Key input */
-.key-inp {
-  flex: 1;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: var(--ink);
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  padding: 7px 10px;
-  outline: none;
-  transition: border-color 0.2s;
-  min-width: 0;
-}
-.key-inp:focus { border-color: var(--ink2); }
-.key-inp::placeholder { color: var(--ink3); }
-
-/* Toggle */
-.toggle-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.tog {
-  position: relative;
-  width: 36px; height: 20px;
-  flex-shrink: 0;
-}
-.tog input { display: none; }
-.tog-track {
-  position: absolute; inset: 0;
-  background: var(--border);
-  border-radius: 10px;
-  transition: background 0.2s;
-  border: 1px solid var(--border2);
-}
-.tog input:checked + .tog-track { background: var(--ink); border-color: var(--ink); }
-.tog-thumb {
-  position: absolute;
-  top: 3px; left: 3px;
-  width: 14px; height: 14px;
-  background: var(--white);
-  border-radius: 50%;
-  transition: left 0.2s;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-}
-.tog input:checked ~ .tog-thumb { left: 19px; }
-.tog-label {
-  font-size: 12px;
-  color: var(--ink2);
-  font-family: 'DM Mono', monospace;
-  white-space: nowrap;
-}
-
-/* Divider */
-.divider { height: 1px; background: var(--border); margin: 0 -4px; }
-
-/* ── CHAT ── */
-.chat-card {
-  background: var(--white);
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: var(--shadow);
-  display: flex;
-  flex-direction: column;
-}
-
-.messages {
-  height: 280px;
-  overflow-y: auto;
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  scroll-behavior: smooth;
-}
-.messages::-webkit-scrollbar { width: 3px; }
-.messages::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-
-.msg {
-  padding: 9px 13px;
-  border-radius: 16px;
-  max-width: 85%;
-  font-size: 13.5px;
-  line-height: 1.6;
-  animation: msgIn 0.18s ease;
-}
-@keyframes msgIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.msg.user {
-  align-self: flex-end;
-  background: var(--ink);
-  color: #fff;
-  border-bottom-right-radius: 5px;
-}
-.msg.ai {
-  align-self: flex-start;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  color: var(--ink);
-  border-bottom-left-radius: 5px;
-}
-.msg.sys {
-  align-self: center;
-  background: transparent;
-  color: var(--ink3);
-  font-size: 11px;
-  font-family: 'DM Mono', monospace;
-  max-width: 100%;
-  text-align: center;
-  padding: 4px 0;
-}
-.msg.think {
-  align-self: flex-start;
-  background: var(--blush);
-  border: 1px solid var(--pink2);
-  color: var(--ink2);
-}
-
-@keyframes dotBounce {
-  0%,80%,100% { transform: translateY(0); }
-  40% { transform: translateY(-4px); }
-}
-.dots span {
-  display: inline-block;
-  width: 5px; height: 5px;
-  background: var(--pink);
-  border-radius: 50%;
-  margin: 0 2px;
-  animation: dotBounce 1.1s infinite;
-}
-.dots span:nth-child(2) { animation-delay: 0.18s; }
-.dots span:nth-child(3) { animation-delay: 0.36s; }
-
-/* ── INPUT BAR ── */
-.input-bar {
-  display: flex;
-  align-items: flex-end;
-  gap: 7px;
-  padding: 10px 12px;
-  border-top: 1px solid var(--border);
-  background: var(--white);
-}
-
-.txt-in {
-  flex: 1;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  color: var(--ink);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 13.5px;
-  padding: 9px 13px;
-  outline: none;
-  resize: none;
-  min-height: 38px;
-  max-height: 110px;
-  line-height: 1.5;
-  transition: border-color 0.2s;
-}
-.txt-in:focus { border-color: var(--border2); }
-.txt-in::placeholder { color: var(--ink3); }
-
-.ibtn {
-  width: 38px; height: 38px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--ink2);
-  font-size: 15px;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.15s;
-  flex-shrink: 0;
-}
-.ibtn:hover { background: var(--border); }
-.ibtn:active { transform: scale(0.93); }
-.ibtn.send { background: var(--ink); color: #fff; border-color: var(--ink); }
-.ibtn.send:hover { background: #444; }
-.ibtn.listening { background: var(--pink); border-color: var(--pink); color: #fff; animation: pulsBtn 0.9s infinite; }
-@keyframes pulsBtn { 0%,100%{opacity:1} 50%{opacity:0.6} }
-
-/* ── FULLSCREEN ── */
-.fs-overlay {
-  display: none;
-  position: fixed; inset: 0;
-  background: rgba(245,243,239,0.92);
-  backdrop-filter: blur(12px);
-  z-index: 999;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 20px;
-  animation: fsIn 0.22s ease;
-  cursor: pointer;
-}
-@keyframes fsIn { from{opacity:0;transform:scale(0.97)} to{opacity:1;transform:scale(1)} }
-.fs-overlay.open { display: flex; }
-.fs-sub { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--ink3); letter-spacing: 0.1em; }
-
-/* ── RESPONSIVE ── */
-@media (max-width: 480px) {
-  .messages { height: 220px; }
-}
-@media (min-width: 700px) {
-  .app { max-width: 460px; }
-  .messages { height: 320px; }
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LOOI Robot - 智慧互動版</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --accent: #ff8a4b;
+      --ink: #222;
+      --success: #4CAF50;
+      --warning: #FF9800;
+      --error: #F44336;
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      overflow: hidden;
+    }
+    
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 10px;
+      transition: all 0.3s ease;
+    }
+    
+    .container.fullscreen {
+      max-width: 100%;
+      padding: 0;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 8px;
+      transition: all 0.3s ease;
+      flex-shrink: 0;
+    }
+    
+    .container.fullscreen .header {
+      display: none;
+    }
+    
+    h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+    
+    .face-container {
+      flex: 0 0 auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 160px;
+      max-height: 200px;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+    
+    .container.fullscreen .face-container {
+      flex: 1;
+      height: 100vh;
+      max-height: none;
+    }
+    
+    .face {
+      width: 100%;
+      max-width: 320px;
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+    
+    .container.fullscreen .face {
+      max-width: 100%;
+      height: 100%;
+      max-height: 100vh;
+    }
+    
+    .face svg {
+      width: 100%;
+      height: 100%;
+      transition: all 0.3s ease;
+    }
+    
+    .face svg circle,
+    .face svg ellipse,
+    .face svg path {
+      stroke: none !important;
+    }
+    
+    .controls-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+    
+    .container.fullscreen .controls-container {
+      display: none;
+    }
+    
+    .card {
+      background: white;
+      padding: 12px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+    
+    .input-section {
+      margin-bottom: 12px;
+      flex-shrink: 0;
+    }
+    
+    .input-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: none;
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    
+    .btn.secondary {
+      background: #eee;
+      color: var(--ink);
+    }
+    
+    textarea {
+      width: 100%;
+      min-height: 60px;
+      max-height: 80px;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      font-size: 14px;
+      resize: vertical;
+      font-family: inherit;
+    }
+    
+    .quick-commands {
+      display: flex;
+      gap: 6px;
+      margin: 8px 0;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    
+    .quick-command {
+      background: #f0f0f0;
+      color: #333;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      border: 1px solid #ddd;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    
+    .quick-command:hover {
+      background: #e0e0e0;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+      flex-shrink: 0;
+    }
+    
+    .keywords {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin: 8px 0;
+      flex-shrink: 0;
+    }
+    
+    .keyword {
+      background: #222;
+      color: white;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+    }
+    
+    .feedback-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .feedback {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      background: #fbfbfd;
+      border: 1px solid #eee;
+      margin-top: 8px;
+      overflow-y: auto;
+      font-size: 14px;
+      line-height: 1.4;
+      min-height: 80px;
+      max-height: 100%;
+    }
+    
+    .device-status {
+      margin-top: 8px;
+      padding: 6px;
+      background: #f0f8ff;
+      border-radius: 6px;
+      font-size: 10px;
+      color: #0066cc;
+      flex-shrink: 0;
+    }
+    
+    footer {
+      margin-top: 8px;
+      font-size: 10px;
+      color: #666;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    
+    .toggle-controls {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid #ddd;
+      border-radius: 50%;
+      width: 25px;
+      height: 25px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 12px;
+      z-index: 10;
+    }
+    
+    .container.fullscreen .toggle-controls {
+      top: 15px;
+      right: 15px;
+      width: 35px;
+      height: 35px;
+      font-size: 16px;
+    }
+    
+    /* 表情動畫系統 */
+    @keyframes happy-pulse {
+      0%, 100% { 
+        opacity: 0.8;
+        transform: scale(1);
+      }
+      50% { 
+        opacity: 1;
+        transform: scale(1.1);
+      }
+    }
+    
+    @keyframes sad-pulse {
+      0%, 100% { 
+        opacity: 0.7;
+        transform: scale(1) translateY(0);
+      }
+      50% { 
+        opacity: 0.9;
+        transform: scale(0.95) translateY(2px);
+      }
+    }
+    
+    @keyframes surprised-pulse {
+      0%, 100% { 
+        opacity: 0.8;
+        transform: scale(1);
+      }
+      50% { 
+        opacity: 1;
+        transform: scale(1.2);
+      }
+    }
+    
+    @keyframes angry-pulse {
+      0%, 100% { 
+        opacity: 0.8;
+        transform: scale(1);
+      }
+      25% { 
+        opacity: 1;
+        transform: scale(1.1) rotate(-5deg);
+      }
+      75% { 
+        opacity: 1;
+        transform: scale(1.1) rotate(5deg);
+      }
+    }
+    
+    @keyframes dizzy-rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(1080deg); }
+    }
+    
+    @keyframes cheek-expand {
+      0%, 100% { 
+        transform: scale(1);
+        rx: 24;
+        ry: 14;
+      }
+      50% { 
+        transform: scale(1.3);
+        rx: 30;
+        ry: 18;
+      }
+    }
+    
+    .expression-happy {
+      animation: happy-pulse 2s ease-in-out infinite;
+    }
+    
+    .expression-sad {
+      animation: sad-pulse 2s ease-in-out infinite;
+    }
+    
+    .expression-surprised {
+      animation: surprised-pulse 0.8s ease-in-out;
+    }
+    
+    .expression-angry {
+      animation: angry-pulse 0.5s ease-in-out infinite;
+    }
+    
+    .expression-dizzy {
+      animation: dizzy-rotate 2s linear;
+    }
+    
+    .cheek-expand {
+      animation: cheek-expand 0.5s ease-in-out;
+    }
+    
+    /* 臉頰動畫 */
+    @keyframes blush-pulse {
+      0%, 100% { 
+        opacity: 0.7;
+        transform: scale(1);
+      }
+      25% { 
+        opacity: 0.9;
+        transform: scale(1.05) translateX(-1px);
+      }
+      50% { 
+        opacity: 0.8;
+        transform: scale(1.02) translateX(1px);
+      }
+      75% { 
+        opacity: 0.9;
+        transform: scale(1.05) translateX(1px);
+      }
+    }
+    
+    @keyframes blush-sway {
+      0%, 100% { 
+        transform: translateX(0);
+        opacity: 0.7;
+      }
+      33% { 
+        transform: translateX(-2px);
+        opacity: 0.9;
+      }
+      66% { 
+        transform: translateX(2px);
+        opacity: 0.9;
+      }
+    }
+    
+    .blush-animation {
+      animation: blush-sway 1.5s ease-in-out;
+    }
+    
+    .blush-pulse-animation {
+      animation: blush-pulse 2s ease-in-out;
+    }
+    
+    /* 設置面板樣式 */
+    .settings-panel {
+      background: white;
+      border-radius: 12px;
+      padding: 12px;
+      margin: 8px 0;
+      border: 1px solid #e9ecef;
+      display: none;
+    }
+    
+    .settings-panel.active {
+      display: block;
+    }
+    
+    .setting-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 8px 0;
+      padding: 6px 0;
+      border-bottom: 1px solid #f1f3f4;
+    }
+    
+    .setting-item:last-child {
+      border-bottom: none;
+    }
+    
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+      background-color: var(--accent);
+    }
+    
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+    
+    /* 記憶面板樣式 */
+    .memory-panel {
+      background: white;
+      border-radius: 12px;
+      padding: 12px;
+      margin: 8px 0;
+      border: 1px solid #e9ecef;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    
+    .memory-item {
+      padding: 6px 8px;
+      margin: 4px 0;
+      background: #f8f9fa;
+      border-radius: 6px;
+      border-left: 3px solid var(--accent);
+      font-size: 12px;
+    }
+    
+    .memory-item .timestamp {
+      font-size: 10px;
+      color: #666;
+      float: right;
+    }
+    
+    /* 通知系統 */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 16px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border-left: 4px solid var(--accent);
+      z-index: 1000;
+      transform: translateX(150%);
+      transition: transform 0.3s ease;
+      max-width: 300px;
+    }
+    
+    .notification.show {
+      transform: translateX(0);
+    }
+    
+    .notification.success {
+      border-left-color: var(--success);
+    }
+    
+    .notification.warning {
+      border-left-color: var(--warning);
+    }
+    
+    .notification.error {
+      border-left-color: var(--error);
+    }
+    
+    /* 互動控制樣式 */
+    .interaction-controls {
+      display: flex;
+      gap: 8px;
+      margin: 8px 0;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    
+    .interaction-btn {
+      background: #e3f2fd;
+      color: #1976d2;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      border: 1px solid #bbdefb;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    
+    .interaction-btn:hover {
+      background: #bbdefb;
+    }
+    
+    .camera-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    .camera-container.active {
+      display: flex;
+    }
+    
+    .camera-view {
+      width: 90%;
+      max-width: 500px;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .camera-controls {
+      position: absolute;
+      bottom: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    
+    .camera-btn {
+      padding: 10px 20px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    /* 5吋手機響應式優化 */
+    @media (max-width: 360px) and (max-height: 640px) {
+      .container {
+        padding: 5px;
+        height: 100vh;
+        max-height: 100vh;
+      }
+      
+      .header {
+        margin-bottom: 5px;
+        padding: 2px 0;
+      }
+      
+      h1 {
+        font-size: 16px;
+      }
+      
+      .face-container {
+        min-height: 120px;
+        max-height: 140px;
+        margin-bottom: 5px;
+      }
+      
+      .face {
+        max-width: 280px;
+        height: 120px;
+      }
+      
+      .card {
+        padding: 6px;
+        flex: 1;
+        min-height: 0;
+      }
+      
+      .btn {
+        padding: 4px 6px;
+        font-size: 10px;
+        gap: 2px;
+      }
+      
+      textarea {
+        min-height: 40px;
+        max-height: 60px;
+        font-size: 12px;
+        padding: 6px;
+      }
+      
+      .quick-command {
+        padding: 3px 6px;
+        font-size: 9px;
+      }
+      
+      .feedback {
+        padding: 6px;
+        font-size: 12px;
+        min-height: 60px;
+        line-height: 1.3;
+      }
+      
+      .toggle-controls {
+        width: 20px;
+        height: 20px;
+        font-size: 9px;
+        top: 5px;
+        right: 5px;
+      }
+      
+      .interaction-btn {
+        padding: 4px 6px;
+        font-size: 9px;
+      }
+      
+      .interaction-controls {
+        gap: 4px;
+        margin: 6px 0;
+      }
+    }
+  </style>
 </head>
 <body>
-
-<div class="app">
-
-  <!-- Face card -->
-  <div class="face-card" id="faceCard">
-    <span class="face-name">miniLooi</span>
-    <svg id="agentFace" width="160" height="100" viewBox="0 0 256 160">
-      <!-- Left eye -->
-      <g id="leftEyeG">
-        <ellipse class="eye-ellipse" id="lEye" cx="88" cy="72" rx="14" ry="14" fill="#2b2b2b"/>
-        <circle id="lPupil" cx="90" cy="70" r="4.5" fill="#fff" opacity="0.18"/>
-      </g>
-      <!-- Right eye -->
-      <g id="rightEyeG">
-        <ellipse class="eye-ellipse-r" id="rEye" cx="168" cy="72" rx="14" ry="14" fill="#2b2b2b"/>
-        <circle id="rPupil" cx="170" cy="70" r="4.5" fill="#fff" opacity="0.18"/>
-      </g>
-      <!-- Blush left -->
-      <ellipse id="blushL" cx="52" cy="106" rx="20" ry="13" fill="#f4b8c1" opacity="0.6"/>
-      <!-- Blush right -->
-      <ellipse id="blushR" cx="204" cy="106" rx="20" ry="13" fill="#f4b8c1" opacity="0.6"/>
-      <!-- Mouth -->
-      <path id="mouth" d="M108 125 Q128 135 148 125" stroke="#2b2b2b" stroke-width="3" fill="none" stroke-linecap="round"/>
-    </svg>
-    <span class="mood-tag" id="moodTag">待機中</span>
-  </div>
-
-  <!-- Controls panel -->
-  <div class="panel">
-
-    <!-- Model selector -->
-    <div class="panel-row">
-      <span class="row-label">模型</span>
-      <select class="sel" id="modelSel">
-        <optgroup label="— 免費 API —">
-          <option value="gemini">✦ Gemini 1.5 Flash（Google）</option>
-          <option value="groq-llama">⚡ Llama 3.1 8B（Groq）</option>
-          <option value="groq-mixtral">⚡ Mixtral 8x7B（Groq）</option>
-          <option value="hf">☁ Hugging Face Inference</option>
-          <option value="openrouter">◈ OpenRouter（免費模型）</option>
-        </optgroup>
-        <optgroup label="— 搜尋 —">
-          <option value="google-search">🔍 Google Search（純搜尋）</option>
-        </optgroup>
-        <optgroup label="— 自訂 —">
-          <option value="custom-api">⚙ 自訂 API（OpenAI 相容）</option>
-          <option value="hf-space">🤗 Hugging Face Space</option>
-        </optgroup>
-      </select>
+  <div class="container">
+    <div class="header">
+      <h1>LOOI Robot - 智慧互動版</h1>
     </div>
-
-    <!-- API Key row -->
-    <div class="panel-row" id="keyRow">
-      <span class="row-label" id="keyLbl">Key</span>
-      <input type="password" class="key-inp" id="keyInp" placeholder="貼上 API Key…">
-    </div>
-
-    <!-- Custom API URL (hidden by default) -->
-    <div class="panel-row" id="customUrlRow" style="display:none">
-      <span class="row-label" style="font-size:9px">Base URL</span>
-      <input type="text" class="key-inp" id="customUrl" placeholder="https://api.example.com/v1">
-    </div>
-    <div class="panel-row" id="customModelRow" style="display:none">
-      <span class="row-label" style="font-size:9px">Model ID</span>
-      <input type="text" class="key-inp" id="customModelId" placeholder="gpt-4o-mini">
-    </div>
-
-    <!-- HF Space URL -->
-    <div class="panel-row" id="hfSpaceRow" style="display:none">
-      <span class="row-label" style="font-size:9px">Space URL</span>
-      <input type="text" class="key-inp" id="hfSpaceUrl" placeholder="https://xxx.hf.space/gradio_api/…">
-    </div>
-
-    <div class="divider"></div>
-
-    <!-- Google Search toggle + keys -->
-    <div class="panel-row">
-      <span class="row-label" style="font-size:9px">G Search</span>
-      <div class="toggle-wrap">
-        <label class="tog">
-          <input type="checkbox" id="searchTog">
-          <div class="tog-track"></div>
-          <div class="tog-thumb"></div>
-        </label>
-        <span class="tog-label">搜尋輔助</span>
+    
+    <div class="face-container">
+      <div class="toggle-controls" id="toggleControls">▼</div>
+      
+      <div class="face card">
+        <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="b"/>
+              <feBlend in="SourceGraphic" in2="b" mode="normal"/>
+            </filter>
+          </defs>
+          
+          <rect x="0" y="0" width="320" height="200" rx="18" fill="#fff" stroke="#f0f0f0" />
+          
+          <!-- 左眼 -->
+          <g id="left-eye">
+            <circle cx="95" cy="110" r="32" fill="#fff" />
+            <circle id="lpupil" cx="95" cy="110" r="14" fill="#111" />
+          </g>
+          
+          <!-- 右眼 -->
+          <g id="right-eye">
+            <circle cx="225" cy="110" r="32" fill="#fff" />
+            <circle id="rpupil" cx="225" cy="110" r="14" fill="#111" />
+          </g>
+          
+          <!-- 臉頰 - 左側 -->
+          <ellipse id="left-blush" cx="40" cy="132" rx="24" ry="14" fill="#ff8a4b" opacity="0.7" />
+          
+          <!-- 臉頰 - 右側 -->
+          <ellipse id="right-blush" cx="280" cy="132" rx="24" ry="14" fill="#ff8a4b" opacity="0.7" />
+        </svg>
       </div>
     </div>
-
-    <div id="googleKeyRows" style="display:none; flex-direction:column; gap:8px">
-      <div class="panel-row">
-        <span class="row-label" style="font-size:9px">G Key</span>
-        <input type="password" class="key-inp" id="gKey" placeholder="Google API Key">
-      </div>
-      <div class="panel-row">
-        <span class="row-label" style="font-size:9px">CSE ID</span>
-        <input type="text" class="key-inp" id="cseId" placeholder="Custom Search Engine ID">
+    
+    <div class="controls-container">
+      <div class="card">
+        <!-- 互動控制 -->
+        <div class="interaction-controls">
+          <div class="interaction-btn" data-interaction="motion">👋 動作偵測模式</div>
+          <div class="interaction-btn" data-interaction="stop">⏹️ 停止偵測</div>
+        </div>
+        
+        <!-- 設置面板 -->
+        <div class="settings-panel" id="settingsPanel">
+          <div class="setting-item">
+            <span>語音回饋</span>
+            <label class="switch">
+              <input type="checkbox" id="voiceFeedback" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="setting-item">
+            <span>眼球追蹤</span>
+            <label class="switch">
+              <input type="checkbox" id="eyeTracking" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="setting-item">
+            <span>記憶功能</span>
+            <label class="switch">
+              <input type="checkbox" id="memoryEnabled" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="setting-item">
+            <span>動作偵測</span>
+            <label class="switch">
+              <input type="checkbox" id="motionDetection" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="setting-item">
+            <span>手勢識別</span>
+            <label class="switch">
+              <input type="checkbox" id="gestureEnabled" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="setting-item">
+            <span>搖晃偵測</span>
+            <label class="switch">
+              <input type="checkbox" id="shakeDetection" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="setting-item">
+            <button class="btn secondary" id="exportData">📥 匯出資料</button>
+            <button class="btn secondary" id="importData">📤 匯入資料</button>
+          </div>
+        </div>
+        
+        <!-- 記憶面板 -->
+        <div class="memory-panel" id="memoryPanel">
+          <div style="font-size: 12px; font-weight: bold; margin-bottom: 8px;">記憶項目</div>
+          <div id="memoryList"></div>
+        </div>
+        
+        <div class="input-section">
+          <div class="input-header">
+            <strong>輸入訊息（語音或文字）</strong>
+            <div>
+              <button id="recBtn" class="btn">🎙️ 語音</button>
+              <button id="stopRecBtn" class="btn secondary">■ 停止</button>
+              <button id="settingsBtn" class="btn secondary">⚙️ 設定</button>
+            </div>
+          </div>
+          
+          <textarea id="textIn" placeholder="輸入你想問 Looi 的話..."></textarea>
+          
+          <div class="quick-commands">
+            <div class="quick-command" data-command="time">現在幾點？</div>
+            <div class="quick-command" data-command="greeting">您好</div>
+            <div class="quick-command" data-command="introduction">介紹一下</div>
+            <div class="quick-command" data-command="chatgpt">問問 GPT</div>
+            <div class="quick-command" data-command="memory">查看記憶</div>
+          </div>
+          
+          <div class="action-buttons">
+            <button id="sendBtn" class="btn">送出</button>
+            <button id="speakBtn" class="btn secondary">🔊 播放</button>
+            <button id="clearBtn" class="btn secondary">🗑️ 清除</button>
+            <div style="flex: 1; text-align: right;" class="meta">
+              語音：<span id="recStatus">未啟動</span>
+            </div>
+          </div>
+          
+          <div class="keywords" id="keywords"></div>
+        </div>
+        
+        <div class="feedback-container">
+          <div class="feedback" id="robotReply">機器人等待使用者輸入...</div>
+        </div>
+        
+        <div class="device-status" id="deviceStatus">
+          設備方向: <span id="orientationStatus">等待檢測</span>
+          <span id="motionStatus" style="margin-left: 10px;">動作: 等待偵測</span>
+        </div>
+        
+        <footer>
+          注意：語音辨識需在支援的瀏覽器與安全來源下執行
+        </footer>
       </div>
     </div>
-
   </div>
 
-  <!-- Chat -->
-  <div class="chat-card">
-    <div class="messages" id="msgs">
-      <div class="msg sys">選好模型、填入 Key，就可以開始聊了 ✦</div>
-    </div>
-    <div class="input-bar">
-      <textarea class="txt-in" id="userIn" placeholder="輸入訊息…" rows="1"></textarea>
-      <button class="ibtn" id="micBtn" title="語音">🎤</button>
-      <button class="ibtn send" id="sendBtn" title="送出">↑</button>
+  <!-- 相機容器 -->
+  <div class="camera-container" id="cameraContainer">
+    <div style="position: relative;">
+      <video id="cameraView" class="camera-view" autoplay playsinline></video>
+      <canvas id="motionCanvas" style="display: none;"></canvas>
+      <div class="camera-controls">
+        <button class="camera-btn" id="closeCameraBtn">❌ 關閉相機</button>
+      </div>
     </div>
   </div>
 
-</div>
+  <!-- 通知容器 -->
+  <div id="notificationContainer"></div>
 
-<!-- Fullscreen overlay -->
-<div class="fs-overlay" id="fsOverlay">
-  <svg width="260" height="163" viewBox="0 0 256 160">
-    <g id="fsLEyeG">
-      <ellipse class="eye-ellipse" cx="88" cy="72" rx="14" ry="14" fill="#2b2b2b"/>
-      <circle id="fsLPupil" cx="90" cy="70" r="4.5" fill="#fff" opacity="0.18"/>
-    </g>
-    <g id="fsREyeG">
-      <ellipse class="eye-ellipse-r" cx="168" cy="72" rx="14" ry="14" fill="#2b2b2b"/>
-      <circle id="fsRPupil" cx="170" cy="70" r="4.5" fill="#fff" opacity="0.18"/>
-    </g>
-    <ellipse cx="52" cy="106" rx="20" ry="13" fill="#f4b8c1" id="fsBlushL" opacity="0.6"/>
-    <ellipse cx="204" cy="106" rx="20" ry="13" fill="#f4b8c1" id="fsBlushR" opacity="0.6"/>
-    <path id="fsMouth" d="M108 125 Q128 135 148 125" stroke="#2b2b2b" stroke-width="3" fill="none" stroke-linecap="round"/>
-  </svg>
-  <span class="fs-sub">點擊關閉</span>
-</div>
+  <!-- 隱藏的檔案輸入元素，用於匯入資料 -->
+  <input type="file" id="importFile" accept=".json" style="display: none;">
 
-<script>
-// ── refs ──
-const modelSel = document.getElementById('modelSel');
-const keyInp   = document.getElementById('keyInp');
-const keyLbl   = document.getElementById('keyLbl');
-const keyRow   = document.getElementById('keyRow');
-const customUrlRow   = document.getElementById('customUrlRow');
-const customModelRow = document.getElementById('customModelRow');
-const hfSpaceRow     = document.getElementById('hfSpaceRow');
-const customUrl      = document.getElementById('customUrl');
-const customModelId  = document.getElementById('customModelId');
-const hfSpaceUrl     = document.getElementById('hfSpaceUrl');
-const searchTog      = document.getElementById('searchTog');
-const googleKeyRows  = document.getElementById('googleKeyRows');
-const gKey  = document.getElementById('gKey');
-const cseId = document.getElementById('cseId');
-const msgsEl  = document.getElementById('msgs');
-const userIn  = document.getElementById('userIn');
-const sendBtn = document.getElementById('sendBtn');
-const micBtn  = document.getElementById('micBtn');
-const faceCard= document.getElementById('faceCard');
-const fsOverlay = document.getElementById('fsOverlay');
-const moodTag   = document.getElementById('moodTag');
+  <script>
+    // --- 記憶系統 ---
+    const memorySystem = {
+      memories: JSON.parse(localStorage.getItem('looi_memories')) || [],
+      
+      addMemory: function(text, type = 'conversation') {
+        const memory = {
+          id: Date.now(),
+          text: text,
+          type: type,
+          timestamp: new Date().toISOString(),
+          keywords: extractKeywords(text, 3)
+        };
+        
+        this.memories.unshift(memory);
+        if (this.memories.length > 50) {
+          this.memories = this.memories.slice(0, 50);
+        }
+        
+        this.saveToLocalStorage();
+        this.updateMemoryDisplay();
+        
+        return memory;
+      },
+      
+      findRelatedMemories: function(text) {
+        const keywords = extractKeywords(text, 3);
+        if (keywords.length === 0) return [];
+        
+        return this.memories.filter(memory => {
+          return keywords.some(keyword => 
+            memory.text.toLowerCase().includes(keyword) || 
+            memory.keywords.includes(keyword)
+          );
+        }).slice(0, 3);
+      },
+      
+      saveToLocalStorage: function() {
+        try {
+          localStorage.setItem('looi_memories', JSON.stringify(this.memories));
+        } catch (e) {
+          console.error('保存記憶到本地存儲失敗:', e);
+          showNotification('保存記憶失敗，本地存儲空間可能已滿', 'error');
+        }
+      },
+      
+      updateMemoryDisplay: function() {
+        const memoryList = document.getElementById('memoryList');
+        if (!memoryList) return;
+        
+        if (this.memories.length === 0) {
+          memoryList.innerHTML = '<div class="memory-item">暫無記憶項目</div>';
+          return;
+        }
+        
+        memoryList.innerHTML = this.memories.slice(0, 5).map(memory => {
+          const date = new Date(memory.timestamp);
+          const timeString = date.toLocaleTimeString('zh-TW', { 
+            hour: '2-digit', 
+            minute: '2-digit'
+          });
+          
+          return `
+            <div class="memory-item">
+              ${memory.text}
+              <span class="timestamp">${timeString}</span>
+            </div>
+          `;
+        }).join('');
+      },
+      
+      exportData: function() {
+        const data = {
+          memories: this.memories,
+          exportDate: new Date().toISOString(),
+          version: '1.0'
+        };
+        
+        const dataStr = JSON.stringify(data, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `looi_memory_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        showNotification('記憶資料匯出成功', 'success');
+      },
+      
+      importData: function(file) {
+        const reader = new FileReader();
+        
+        reader.onload = (e) => {
+          try {
+            const data = JSON.parse(e.target.result);
+            
+            if (data.memories && Array.isArray(data.memories)) {
+              this.memories = [...data.memories, ...this.memories].slice(0, 50);
+              this.saveToLocalStorage();
+              this.updateMemoryDisplay();
+              showNotification('記憶資料匯入成功', 'success');
+            } else {
+              throw new Error('無效的資料格式');
+            }
+          } catch (error) {
+            console.error('匯入資料失敗:', error);
+            showNotification('匯入失敗：檔案格式不正確', 'error');
+          }
+        };
+        
+        reader.readAsText(file);
+      }
+    };
 
-let history = [];
+    // --- 通知系統 ---
+    function showNotification(message, type = 'info') {
+      const container = document.getElementById('notificationContainer');
+      const id = 'notification-' + Date.now();
+      
+      const notification = document.createElement('div');
+      notification.id = id;
+      notification.className = `notification ${type}`;
+      notification.innerHTML = `
+        <div style="font-size: 14px; font-weight: 500;">${message}</div>
+      `;
+      
+      container.appendChild(notification);
+      
+      setTimeout(() => notification.classList.add('show'), 10);
+      
+      setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 300);
+      }, 3000);
+    }
 
-// ── Model config ──
-const MC = {
-  'gemini':       { lbl:'Gemini Key', ph:'AIza…', showKey:true },
-  'groq-llama':   { lbl:'Groq Key',   ph:'gsk_…', showKey:true },
-  'groq-mixtral': { lbl:'Groq Key',   ph:'gsk_…', showKey:true },
-  'hf':           { lbl:'HF Token',   ph:'hf_…（選填）', showKey:true },
-  'openrouter':   { lbl:'OR Key',     ph:'sk-or-…', showKey:true },
-  'google-search':{ lbl:'G Key',      ph:'純搜尋不需 AI Key', showKey:false },
-  'custom-api':   { lbl:'API Key',    ph:'sk-…', showKey:true },
-  'hf-space':     { lbl:'HF Token',   ph:'hf_…（選填）', showKey:true },
-};
+    // --- 表情系統 ---
+    const expressionSystem = {
+      setExpression: function(expression) {
+        const face = document.querySelector('.face');
+        const leftBlush = document.getElementById('left-blush');
+        const rightBlush = document.getElementById('right-blush');
+        
+        // 移除所有表情類別
+        face.classList.remove('expression-happy', 'expression-sad', 'expression-surprised', 'expression-angry');
+        
+        switch(expression) {
+          case 'happy':
+            face.classList.add('expression-happy');
+            leftBlush.setAttribute('opacity', '0.9');
+            rightBlush.setAttribute('opacity', '0.9');
+            break;
+            
+          case 'sad':
+            face.classList.add('expression-sad');
+            leftBlush.setAttribute('opacity', '0.5');
+            rightBlush.setAttribute('opacity', '0.5');
+            break;
+            
+          case 'surprised':
+            face.classList.add('expression-surprised');
+            leftBlush.setAttribute('opacity', '1');
+            rightBlush.setAttribute('opacity', '1');
+            break;
+            
+          case 'angry':
+            face.classList.add('expression-angry');
+            leftBlush.setAttribute('fill', '#ff4444');
+            rightBlush.setAttribute('fill', '#ff4444');
+            leftBlush.setAttribute('opacity', '0.9');
+            rightBlush.setAttribute('opacity', '0.9');
+            break;
+            
+          case 'normal':
+          default:
+            leftBlush.setAttribute('fill', '#ff8a4b');
+            rightBlush.setAttribute('fill', '#ff8a4b');
+            leftBlush.setAttribute('opacity', '0.7');
+            rightBlush.setAttribute('opacity', '0.7');
+            break;
+        }
+        
+        triggerBlushAnimation();
+      },
+      
+      randomExpression: function() {
+        const expressions = ['happy', 'sad', 'surprised', 'normal'];
+        const randomExpression = expressions[Math.floor(Math.random() * expressions.length)];
+        this.setExpression(randomExpression);
+        
+        setTimeout(() => {
+          this.setExpression('normal');
+        }, 5000 + Math.random() * 10000);
+      }
+    };
 
-modelSel.addEventListener('change', () => {
-  const m = modelSel.value;
-  const c = MC[m];
-  keyLbl.textContent = c.lbl;
-  keyInp.placeholder = c.ph;
-  keyRow.style.display = c.showKey ? 'flex' : 'none';
-  customUrlRow.style.display   = m === 'custom-api' ? 'flex' : 'none';
-  customModelRow.style.display = m === 'custom-api' ? 'flex' : 'none';
-  hfSpaceRow.style.display     = m === 'hf-space'   ? 'flex' : 'none';
-  history = [];
-});
+    // --- 動作偵測系統 ---
+    const motionDetectionSystem = {
+      isEnabled: true,
+      cameraStream: null,
+      isMotionActive: false,
+      lastFrame: null,
+      motionThreshold: 50,
+      greetingCooldown: 0,
+      
+      startMotionDetection: async function() {
+        try {
+          this.cameraStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+              width: 320, 
+              height: 240,
+              facingMode: 'user'
+            } 
+          });
+          
+          const cameraView = document.getElementById('cameraView');
+          cameraView.srcObject = this.cameraStream;
+          document.getElementById('cameraContainer').classList.add('active');
+          this.isMotionActive = true;
+          
+          // 開始動作偵測
+          this.detectMotion();
+          
+          showNotification('動作偵測已啟動，請在鏡頭前揮手', 'success');
+          speakText('我現在可以偵測動作了，對我揮揮手吧！');
+          
+        } catch (error) {
+          console.error('無法開啟相機:', error);
+          showNotification('無法開啟相機，請檢查權限設定', 'error');
+        }
+      },
+      
+      stopMotionDetection: function() {
+        if (this.cameraStream) {
+          this.cameraStream.getTracks().forEach(track => track.stop());
+          this.cameraStream = null;
+        }
+        document.getElementById('cameraContainer').classList.remove('active');
+        this.isMotionActive = false;
+        this.lastFrame = null;
+        
+        showNotification('動作偵測已停止', 'info');
+        speakText('動作偵測關閉了');
+      },
+      
+      detectMotion: function() {
+        if (!this.isMotionActive) return;
+        
+        const cameraView = document.getElementById('cameraView');
+        const motionCanvas = document.getElementById('motionCanvas');
+        const context = motionCanvas.getContext('2d');
+        
+        motionCanvas.width = cameraView.videoWidth;
+        motionCanvas.height = cameraView.videoHeight;
+        
+        context.drawImage(cameraView, 0, 0, motionCanvas.width, motionCanvas.height);
+        const currentFrame = context.getImageData(0, 0, motionCanvas.width, motionCanvas.height);
+        
+        if (this.lastFrame) {
+          const motion = this.calculateMotion(this.lastFrame, currentFrame);
+          this.updateMotionStatus(motion);
+          
+          if (motion > this.motionThreshold && this.greetingCooldown <= 0) {
+            this.triggerGreeting();
+            this.greetingCooldown = 300; // 5秒冷卻
+          }
+        }
+        
+        this.lastFrame = currentFrame;
+        this.greetingCooldown = Math.max(0, this.greetingCooldown - 1);
+        
+        if (this.isMotionActive) {
+          requestAnimationFrame(() => this.detectMotion());
+        }
+      },
+      
+      calculateMotion: function(frame1, frame2) {
+        let diff = 0;
+        for (let i = 0; i < frame1.data.length; i += 4) {
+          const pixelDiff = Math.abs(frame1.data[i] - frame2.data[i]) +
+                           Math.abs(frame1.data[i + 1] - frame2.data[i + 1]) +
+                           Math.abs(frame1.data[i + 2] - frame2.data[i + 2]);
+          diff += pixelDiff;
+        }
+        return diff / (frame1.width * frame1.height * 3);
+      },
+      
+      updateMotionStatus: function(motionLevel) {
+        const motionStatus = document.getElementById('motionStatus');
+        const level = Math.min(100, Math.round(motionLevel));
+        motionStatus.textContent = `動作: ${level}%`;
+        
+        if (level > 50) {
+          motionStatus.style.color = '#ff4444';
+        } else if (level > 20) {
+          motionStatus.style.color = '#ff8a4b';
+        } else {
+          motionStatus.style.color = '#0066cc';
+        }
+      },
+      
+      triggerGreeting: function() {
+        const greetings = [
+          '嗨！看到你了！',
+          '你好啊！',
+          '哇！有人在那裡！',
+          '嗨嗨！注意到你了！'
+        ];
+        
+        const greeting = greetings[Math.floor(Math.random() * greetings.length)];
+        showNotification('👋 ' + greeting, 'success');
+        speakText(greeting);
+        expressionSystem.setExpression('surprised');
+        
+        setTimeout(() => {
+          expressionSystem.setExpression('normal');
+        }, 3000);
+      }
+    };
 
-searchTog.addEventListener('change', () => {
-  googleKeyRows.style.display = searchTog.checked ? 'flex' : 'none';
-});
+    // --- 手勢識別系統 ---
+    const gestureRecognitionSystem = {
+      isEnabled: true,
+      
+      detectGesture: function() {
+        // 簡化的手勢偵測邏輯
+        const gestures = ['thumbsup', 'middlefinger', 'unknown'];
+        return gestures[Math.floor(Math.random() * gestures.length)];
+      },
+      
+      handleGesture: function(gesture) {
+        if (!document.getElementById('gestureEnabled').checked) return;
+        
+        switch(gesture) {
+          case 'thumbsup':
+            this.handleThumbsUp();
+            break;
+          case 'middlefinger':
+            this.handleMiddleFinger();
+            break;
+        }
+      },
+      
+      handleThumbsUp: function() {
+        showNotification('👍 偵測到比讚！好開心！', 'success');
+        speakText('謝謝你的讚！');
+        expressionSystem.setExpression('happy');
+      },
+      
+      handleMiddleFinger: function() {
+        showNotification('👎 偵測到不友善手勢！', 'warning');
+        speakText('這樣不禮貌喔！');
+        expressionSystem.setExpression('angry');
+        
+        const leftBlush = document.getElementById('left-blush');
+        const rightBlush = document.getElementById('right-blush');
+        
+        leftBlush.classList.add('cheek-expand');
+        rightBlush.classList.add('cheek-expand');
+        
+        setTimeout(() => {
+          leftBlush.classList.remove('cheek-expand');
+          rightBlush.classList.remove('cheek-expand');
+        }, 500);
+        
+        setTimeout(() => {
+          expressionSystem.setExpression('normal');
+        }, 5000);
+      }
+    };
 
-// ── Face state ──
-function setFace(state) {
-  const mouth    = document.getElementById('mouth');
-  const fsMouth  = document.getElementById('fsMouth');
-  const blushL   = document.getElementById('blushL');
-  const blushR   = document.getElementById('blushR');
-  const fsBlushL = document.getElementById('fsBlushL');
-  const fsBlushR = document.getElementById('fsBlushR');
+    // --- 手機搖晃偵測 ---
+    const shakeDetectionSystem = {
+      isEnabled: true,
+      lastAcceleration: { x: null, y: null, z: null },
+      shakeThreshold: 15,
+      isDizzy: false,
+      
+      init: function() {
+        if (window.DeviceMotionEvent) {
+          window.addEventListener('devicemotion', (event) => {
+            this.handleMotion(event);
+          });
+        }
+      },
+      
+      handleMotion: function(event) {
+        if (!document.getElementById('shakeDetection').checked) return;
+        if (this.isDizzy) return;
+        
+        const acceleration = event.accelerationIncludingGravity;
+        if (!acceleration) return;
+        
+        if (this.lastAcceleration.x !== null) {
+          const deltaX = Math.abs(acceleration.x - this.lastAcceleration.x);
+          const deltaY = Math.abs(acceleration.y - this.lastAcceleration.y);
+          const deltaZ = Math.abs(acceleration.z - this.lastAcceleration.z);
+          
+          const totalDelta = deltaX + deltaY + deltaZ;
+          
+          if (totalDelta > this.shakeThreshold) {
+            this.triggerDizzy();
+          }
+        }
+        
+        this.lastAcceleration = {
+          x: acceleration.x,
+          y: acceleration.y,
+          z: acceleration.z
+        };
+      },
+      
+      triggerDizzy: function() {
+        this.isDizzy = true;
+        
+        showNotification('🌀 偵測到劇烈搖晃！', 'warning');
+        speakText('好暈喔～不要再搖了！');
+        
+        const leftEye = document.getElementById('left-eye');
+        const rightEye = document.getElementById('right-eye');
+        
+        leftEye.classList.add('expression-dizzy');
+        rightEye.classList.add('expression-dizzy');
+        
+        setTimeout(() => {
+          leftEye.classList.remove('expression-dizzy');
+          rightEye.classList.remove('expression-dizzy');
+          this.isDizzy = false;
+          expressionSystem.setExpression('normal');
+        }, 3000);
+      }
+    };
 
-  const paths = {
-    smile:   'M108 125 Q128 138 148 125',
-    neutral: 'M108 128 Q128 128 148 128',
-    smirk:   'M108 130 Q128 122 148 130',
-    open:    'M108 125 Q128 142 148 125',
-  };
-  const moods = {
-    idle:      { d: paths.smile,   blush: '0.55', tag: '待機中',   blushR: 20 },
-    thinking:  { d: paths.smirk,   blush: '0.3',  tag: '思考中…',  blushR: 16 },
-    speaking:  { d: paths.open,    blush: '0.8',  tag: '回答中',   blushR: 22 },
-    listening: { d: paths.neutral, blush: '0.4',  tag: '聆聽中…',  blushR: 18 },
-    searching: { d: paths.smirk,   blush: '0.25', tag: '搜尋中…',  blushR: 14 },
-  };
-  const s = moods[state] || moods.idle;
-  [mouth, fsMouth].forEach(el => { if(el) el.setAttribute('d', s.d); });
-  [blushL, blushR, fsBlushL, fsBlushR].forEach(el => {
-    if(el) { el.setAttribute('opacity', s.blush); el.setAttribute('rx', s.blushR); }
-  });
-  moodTag.textContent = s.tag;
-}
+    // --- 關鍵字提取功能 ---
+    function extractKeywords(text, max=3) {
+      if(!text) return [];
+      
+      text = text.toLowerCase();
+      text = text.replace(/[\u2000-\u206F\u2E00-\u2E7F\'"\“\”\‘\’\(\)\[\]\{\},\.\?\!\:\;\-\/\\]/g,' ');
+      
+      const tokens = text.split(/\s+/).filter(Boolean);
+      const stopwords = new Set(["的","了","是","我","你","他","她","在","有","沒","沒有","和","或","也","要","可以","幫","請","嗎","呢","很","就","跟","給","都","還","及","與","為","到","要不要","要是","今天","明天","請問"]);
+      
+      const counts = {};
+      tokens.forEach(t => {
+        if(t.length <= 1) return;
+        if(stopwords.has(t)) return;
+        counts[t] = (counts[t] || 0) + 1;
+      });
+      
+      const arr = Object.keys(counts).map(k => ({k, count: counts[k]})).sort((a, b) => b.count - a.count);
+      return arr.slice(0, max).map(x => x.k);
+    }
 
-// ── Eye tracking ──
-document.addEventListener('mousemove', e => {
-  const svg = document.getElementById('agentFace');
-  if (!svg) return;
-  const r = svg.getBoundingClientRect();
-  const pairs = [
-    { el: document.getElementById('lPupil'), bx: 88, by: 72 },
-    { el: document.getElementById('rPupil'), bx: 168, by: 72 },
-  ];
-  pairs.forEach(({ el, bx, by }) => {
-    if (!el) return;
-    const sx = r.left + (bx / 256) * r.width;
-    const sy = r.top  + (by / 160) * r.height;
-    const dx = e.clientX - sx, dy = e.clientY - sy;
-    const d = Math.sqrt(dx*dx+dy*dy);
-    const m = 2.5;
-    el.setAttribute('cx', (bx + (dx/Math.max(d,1)) * Math.min(d*0.04, m)).toFixed(1));
-    el.setAttribute('cy', (by + (dy/Math.max(d,1)) * Math.min(d*0.04, m)).toFixed(1));
-  });
-  // fullscreen pupils
-  const fsPairs = [
-    { el: document.getElementById('fsLPupil'), bx: 88, by: 72 },
-    { el: document.getElementById('fsRPupil'), bx: 168, by: 72 },
-  ];
-  const fsr = document.querySelector('#fsOverlay svg')?.getBoundingClientRect();
-  if (fsr && fsOverlay.classList.contains('open')) {
-    fsPairs.forEach(({ el, bx, by }) => {
-      if (!el) return;
-      const sx = fsr.left + (bx / 256) * fsr.width;
-      const sy = fsr.top  + (by / 160) * fsr.height;
-      const dx = e.clientX - sx, dy = e.clientY - sy;
-      const d = Math.sqrt(dx*dx+dy*dy);
-      const m = 2.5;
-      el.setAttribute('cx', (bx + (dx/Math.max(d,1)) * Math.min(d*0.04, m)).toFixed(1));
-      el.setAttribute('cy', (by + (dy/Math.max(d,1)) * Math.min(d*0.04, m)).toFixed(1));
+    // --- 檢查是否為 ChatGPT 相關查詢 ---
+    function isChatGPTQuery(text) {
+      if (!text) return false;
+      
+      const chatgptKeywords = ['gpt', 'chatgpt', 'openai', '問問', '問問ai', 'ai', '人工智慧', '智能助手', '聊天機器人'];
+      const lowerText = text.toLowerCase();
+      
+      return chatgptKeywords.some(keyword => lowerText.includes(keyword));
+    }
+
+    // --- 清理 GPT 相關字詞 ---
+    function cleanGPTQuery(text) {
+      if (!text) return '';
+      
+      const gptPatterns = [
+        /(請)?(幫我)?(問問|詢問|查詢)?\s*(gpt|chatgpt|openai|ai|人工智慧|智能助手|聊天機器人)/gi,
+        /(向)?\s*(gpt|chatgpt|openai|ai)\s*(詢問|提問|查詢)/gi,
+        /(幫我)?\s*問問\s*(gpt|ai)/gi
+      ];
+      
+      let cleanedText = text;
+      gptPatterns.forEach(pattern => {
+        cleanedText = cleanedText.replace(pattern, '').trim();
+      });
+      
+      cleanedText = cleanedText.replace(/^[，。！？、\s]+|[，。！？、\s]+$/g, '');
+      
+      return cleanedText || '你好';
+    }
+
+    // --- UI 元素引用 ---
+    const textIn = document.getElementById('textIn');
+    const sendBtn = document.getElementById('sendBtn');
+    const keywordsEl = document.getElementById('keywords');
+    const robotReply = document.getElementById('robotReply');
+    const speakBtn = document.getElementById('speakBtn');
+    const recBtn = document.getElementById('recBtn');
+    const stopRecBtn = document.getElementById('stopRecBtn');
+    const recStatus = document.getElementById('recStatus');
+    const orientationStatus = document.getElementById('orientationStatus');
+    const toggleControls = document.getElementById('toggleControls');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const closeCameraBtn = document.getElementById('closeCameraBtn');
+    const container = document.querySelector('.container');
+    const leftBlush = document.getElementById('left-blush');
+    const rightBlush = document.getElementById('right-blush');
+    const lpupil = document.getElementById('lpupil');
+    const rpupil = document.getElementById('rpupil');
+
+    // --- 互動按鈕事件 ---
+    document.querySelectorAll('.interaction-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const interaction = this.dataset.interaction;
+        handleInteraction(interaction);
+      });
     });
-  }
-});
 
-// ── Fullscreen ──
-faceCard.addEventListener('click', () => fsOverlay.classList.add('open'));
-fsOverlay.addEventListener('click',  () => fsOverlay.classList.remove('open'));
-
-// ── Messages ──
-function addMsg(text, role) {
-  const el = document.createElement('div');
-  el.className = 'msg ' + role;
-  el.textContent = text;
-  msgsEl.appendChild(el);
-  msgsEl.scrollTop = msgsEl.scrollHeight;
-  return el;
-}
-function addThink() {
-  const el = document.createElement('div');
-  el.className = 'msg think';
-  el.innerHTML = '<span class="dots"><span></span><span></span><span></span></span>';
-  msgsEl.appendChild(el);
-  msgsEl.scrollTop = msgsEl.scrollHeight;
-  return el;
-}
-
-// ── Google Search helper ──
-async function doGoogleSearch(q) {
-  const k = gKey.value.trim(), cx = cseId.value.trim();
-  if (!k || !cx) return null;
-  try {
-    const res = await fetch(`https://www.googleapis.com/customsearch/v1?key=${k}&cx=${cx}&q=${encodeURIComponent(q)}&num=3`);
-    const data = await res.json();
-    if (!data.items) return '（搜尋無結果）';
-    return data.items.map((it,i) => `[${i+1}] ${it.title}\n${it.snippet}`).join('\n\n');
-  } catch(e) { return '（搜尋失敗）'; }
-}
-
-// ── Pure Google Search mode ──
-async function pureSearch(q) {
-  setFace('searching');
-  const result = await doGoogleSearch(q);
-  if (!result) return '請在 Google Search Keys 填入 API Key 與 CSE ID';
-  return '🔍 搜尋結果：\n\n' + result;
-}
-
-// ── API calls ──
-async function callGemini(text, key) {
-  if (!key) return '請輸入 Gemini API Key（aistudio.google.com 免費取得）';
-  history.push({ role: 'user', parts: [{ text }] });
-  try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${key}`,
-      { method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ contents: history }) }
-    );
-    const d = await res.json();
-    if (d.error) return '錯誤：' + d.error.message;
-    const r = d.candidates?.[0]?.content?.parts?.[0]?.text || '（無回應）';
-    history.push({ role:'model', parts:[{text:r}] });
-    return r;
-  } catch(e) { return '連線失敗：' + e.message; }
-}
-
-async function callGroq(text, key, model) {
-  if (!key) return '請輸入 Groq API Key（console.groq.com 免費取得）';
-  history.push({ role:'user', content:text });
-  try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
-      body: JSON.stringify({ model, max_tokens:1024,
-        messages:[{role:'system',content:'你是友善的 AI 助理，使用繁體中文。'}, ...history] })
+    // --- 快速指令處理 ---
+    const quickCommands = document.querySelectorAll('.quick-command');
+    quickCommands.forEach(button => {
+      button.addEventListener('click', () => {
+        const command = button.dataset.command;
+        handleQuickCommand(command);
+      });
     });
-    const d = await res.json();
-    if (d.error) return '錯誤：' + d.error.message;
-    const r = d.choices?.[0]?.message?.content || '（無回應）';
-    history.push({ role:'assistant', content:r });
-    return r;
-  } catch(e) { return '連線失敗：' + e.message; }
-}
 
-async function callHF(text, key) {
-  const headers = {'Content-Type':'application/json'};
-  if (key) headers['Authorization'] = `Bearer ${key}`;
-  try {
-    const res = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium',
-      { method:'POST', headers, body:JSON.stringify({inputs:text}) });
-    const d = await res.json();
-    if (d.error) return '錯誤：' + d.error;
-    return d[0]?.generated_text || JSON.stringify(d);
-  } catch(e) { return '連線失敗：' + e.message; }
-}
+    function handleQuickCommand(command) {
+      let reply = '';
+      
+      switch(command) {
+        case 'time':
+          const now = new Date();
+          const timeString = now.toLocaleTimeString('zh-TW', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            second: '2-digit'
+          });
+          reply = `現在時間是 ${timeString}`;
+          expressionSystem.setExpression('normal');
+          break;
+          
+        case 'greeting':
+          const hour = new Date().getHours();
+          let greeting = '';
+          
+          if (hour >= 5 && hour < 12) {
+            greeting = '早安';
+          } else if (hour >= 12 && hour < 18) {
+            greeting = '午安';
+          } else {
+            greeting = '晚安';
+          }
+          
+          reply = `${greeting}！我是你的好朋友 Looi，很高興為你服務喔！`;
+          expressionSystem.setExpression('happy');
+          break;
+          
+        case 'introduction':
+          reply = '嗨！我是 Looi，一個聰明的機器人朋友！我可以幫你找資料、回答問題，還可以偵測你的動作和手勢喔！';
+          expressionSystem.setExpression('happy');
+          break;
+          
+        case 'chatgpt':
+          reply = '好喔！我幫你問問聰明的 GPT 助手！請告訴我你想問什麼問題呢？';
+          textIn.placeholder = '請輸入你想問 GPT 的問題...';
+          expressionSystem.setExpression('surprised');
+          break;
+          
+        case 'memory':
+          memorySystem.updateMemoryDisplay();
+          reply = '這是你最近跟我說過的話喔！';
+          expressionSystem.setExpression('normal');
+          break;
+      }
+      
+      robotReply.textContent = reply;
+      robotReply.dataset.text = reply;
+      
+      triggerBlushAnimation();
+      speakText(reply);
+    }
 
-async function callOpenRouter(text, key) {
-  if (!key) return '請輸入 OpenRouter API Key（openrouter.ai 免費取得）';
-  history.push({ role:'user', content:text });
-  try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`,
-               'HTTP-Referer':location.href,'X-Title':'miniLooi'},
-      body: JSON.stringify({ model:'meta-llama/llama-3.1-8b-instruct:free',
-        messages:[{role:'system',content:'你是友善的 AI 助理，使用繁體中文。'}, ...history] })
+    function handleInteraction(interaction) {
+      switch(interaction) {
+        case 'motion':
+          motionDetectionSystem.startMotionDetection();
+          break;
+        case 'stop':
+          motionDetectionSystem.stopMotionDetection();
+          break;
+      }
+    }
+
+    // --- 臉頰紅暈動畫功能 ---
+    function triggerBlushAnimation() {
+      leftBlush.classList.remove('blush-animation', 'blush-pulse-animation');
+      rightBlush.classList.remove('blush-animation', 'blush-pulse-animation');
+      
+      void leftBlush.offsetWidth;
+      void rightBlush.offsetWidth;
+      
+      const animations = ['blush-animation', 'blush-pulse-animation'];
+      const randomAnimation = animations[Math.floor(Math.random() * animations.length)];
+      
+      leftBlush.classList.add(randomAnimation);
+      rightBlush.classList.add(randomAnimation);
+      
+      setTimeout(() => {
+        leftBlush.classList.remove(randomAnimation);
+        rightBlush.classList.remove(randomAnimation);
+      }, 2000);
+    }
+
+    // --- 事件監聽器 ---
+    sendBtn.addEventListener('click', () => {
+      handleSend(textIn.value);
+      triggerBlushAnimation();
     });
-    const d = await res.json();
-    if (d.error) return '錯誤：' + d.error.message;
-    const r = d.choices?.[0]?.message?.content || '（無回應）';
-    history.push({ role:'assistant', content:r });
-    return r;
-  } catch(e) { return '連線失敗：' + e.message; }
-}
 
-async function callCustomAPI(text, key) {
-  const base  = customUrl.value.trim() || 'https://api.openai.com/v1';
-  const model = customModelId.value.trim() || 'gpt-4o-mini';
-  if (!key) return '請輸入 API Key';
-  history.push({ role:'user', content:text });
-  try {
-    const res = await fetch(`${base}/chat/completions`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
-      body: JSON.stringify({ model, max_tokens:1024,
-        messages:[{role:'system',content:'你是友善的 AI 助理，使用繁體中文。'}, ...history] })
+    speakBtn.addEventListener('click', () => {
+      const txt = robotReply.dataset.text || robotReply.textContent;
+      speakText(txt);
+      triggerBlushAnimation();
     });
-    const d = await res.json();
-    if (d.error) return '錯誤：' + d.error.message;
-    const r = d.choices?.[0]?.message?.content || '（無回應）';
-    history.push({ role:'assistant', content:r });
-    return r;
-  } catch(e) { return '連線失敗：' + e.message; }
-}
 
-async function callHFSpace(text) {
-  const url = hfSpaceUrl.value.trim();
-  if (!url) return '請填入 HF Space URL';
-  try {
-    const res = await fetch(url, { method:'POST',
-      headers:{'Content-Type':'application/json'}, body:JSON.stringify({data:[text]}) });
-    const d = await res.json();
-    return d.data?.[0] || '（空回應）';
-  } catch(e) { return '連線失敗：' + e.message; }
-}
+    settingsBtn.addEventListener('click', () => {
+      const settingsPanel = document.getElementById('settingsPanel');
+      settingsPanel.classList.toggle('active');
+    });
 
-// ── Main handler ──
-async function handleSend() {
-  const text = userIn.value.trim();
-  if (!text) return;
+    closeCameraBtn.addEventListener('click', () => {
+      motionDetectionSystem.stopMotionDetection();
+    });
 
-  addMsg(text, 'user');
-  userIn.value = '';
-  userIn.style.height = 'auto';
-  sendBtn.disabled = true;
+    // 控制面板摺疊功能
+    let isFullscreen = false;
+    toggleControls.addEventListener('click', () => {
+      isFullscreen = !isFullscreen;
+      
+      if (isFullscreen) {
+        container.classList.add('fullscreen');
+        toggleControls.textContent = '▲';
+      } else {
+        container.classList.remove('fullscreen');
+        toggleControls.textContent = '▼';
+      }
+    });
 
-  const model = modelSel.value;
-  const key   = keyInp.value.trim();
+    function updateKeywordsView(keys) {
+      keywordsEl.innerHTML = '';
+      if(keys.length === 0) return;
+      
+      keys.forEach(k => {
+        const b = document.createElement('div'); 
+        b.className = 'keyword'; 
+        b.textContent = k; 
+        keywordsEl.appendChild(b);
+      });
+    }
 
-  // Pure Google Search mode
-  if (model === 'google-search') {
-    setFace('searching');
-    const thinkEl = addThink();
-    const reply = await pureSearch(text);
-    thinkEl.remove();
-    addMsg(reply, 'ai');
-    setFace('idle');
-    sendBtn.disabled = false;
-    return;
-  }
+    function handleSend(raw) {
+      raw = (raw || '').trim();
+      
+      if(!raw) {
+        robotReply.textContent = '請先輸入或用語音輸入一段文字喔！'; 
+        return;
+      }
+      
+      if (raw.includes('現在幾點') || raw.includes('報時') || raw.includes('時間')) {
+        handleQuickCommand('time');
+        return;
+      } else if (raw.includes('你好') || raw.includes('您好') || raw.includes('嗨')) {
+        handleQuickCommand('greeting');
+        return;
+      } else if (raw.includes('介紹') || raw.includes('你是誰') || raw.includes('功能')) {
+        handleQuickCommand('introduction');
+        return;
+      } else if (raw.includes('記憶') || raw.includes('記住') || raw.includes('記得')) {
+        memorySystem.addMemory(raw, 'user_input');
+        robotReply.textContent = '我記住你說的話了！';
+        robotReply.dataset.text = '我記住你說的話了！';
+        speakText('好喔，我記住了！');
+        expressionSystem.setExpression('happy');
+        return;
+      }
+      
+      if (isChatGPTQuery(raw)) {
+        const cleanedQuery = cleanGPTQuery(raw);
+        robotReply.textContent = '好喔！我幫你問問聰明的 GPT 助手！';
+        expressionSystem.setExpression('surprised');
+        
+        const chatGPTUrl = 'https://chat.openai.com/?q=' + encodeURIComponent(cleanedQuery);
+        
+        setTimeout(() => {
+          window.open(chatGPTUrl, '_blank');
+          speakText('幫你打開 GPT 了，在新頁面裡問問題吧！');
+        }, 1000);
+        
+        return;
+      }
+      
+      robotReply.textContent = '讓我想一想喔...';
+      expressionSystem.setExpression('normal');
+      
+      if (document.getElementById('memoryEnabled').checked) {
+        const relatedMemories = memorySystem.findRelatedMemories(raw);
+        if (relatedMemories.length > 0) {
+          const memoryText = relatedMemories[0].text;
+          robotReply.textContent += `\n\n[我記得你說過]：${memoryText}`;
+        }
+      }
+      
+      const keys = extractKeywords(raw, 4);
+      updateKeywordsView(keys);
+      
+      const query = keys.length ? keys.join(' ') : raw.split('\n').slice(0,6).join(' ');
+      const reply = `我聽到你說：${keys.length ? keys.join(', ') : '(我沒聽清楚)'}。讓我幫你找找資料：${query}`;
+      
+      robotReply.textContent = reply; 
+      robotReply.dataset.text = reply;
+      
+      triggerBlushAnimation();
+      speakText(reply);
+      
+      if (document.getElementById('memoryEnabled').checked) {
+        memorySystem.addMemory(raw, 'conversation');
+      }
+      
+      const url = 'https://www.google.com/search?q=' + encodeURIComponent(query);
+      
+      setTimeout(() => {
+        window.open(url, '_blank');
+      }, 650);
+    }
 
-  // Inject search context
-  let prompt = text;
-  if (searchTog.checked) {
-    setFace('searching');
-    const sr = await doGoogleSearch(text);
-    if (sr) prompt = `使用者問：${text}\n\n【網路搜尋結果，請據此回答】\n${sr}`;
-  }
+    // --- 語音合成功能 ---
+    function speakText(text) {
+      if(!('speechSynthesis' in window)) return;
+      if (!document.getElementById('voiceFeedback').checked) return;
+      
+      window.speechSynthesis.cancel();
+      
+      const u = new SpeechSynthesisUtterance(text);
+      
+      u.rate = 1.1;
+      u.pitch = 1.4;
+      u.volume = 0.9;
+      
+      const voices = window.speechSynthesis.getVoices();
+      
+      let voice = voices.find(v => 
+        v.lang.includes('zh') && (
+          v.name.toLowerCase().includes('child') ||
+          v.name.toLowerCase().includes('kids') ||
+          v.name.toLowerCase().includes('high')
+        )
+      );
+      
+      if (!voice) {
+        voice = voices.find(v => 
+          v.lang.includes('zh-TW') || 
+          v.lang.includes('zh-CN') ||
+          v.lang.includes('zh-HK')
+        );
+      }
+      
+      if (voice) u.voice = voice;
+      
+      window.speechSynthesis.speak(u);
+    }
 
-  setFace('thinking');
-  const thinkEl = addThink();
+    // --- 眼球跟隨鼠標動畫 ---
+    let faceRect = {x:0, y:0, w:320, h:200};
+    
+    function updateFaceRect() {
+      const svg = document.querySelector('.face svg');
+      const r = svg.getBoundingClientRect();
+      faceRect = {x:r.left, y:r.top, w:r.width, h:r.height};
+    }
+    
+    updateFaceRect(); 
+    window.addEventListener('resize', updateFaceRect);
+    
+    document.addEventListener('mousemove', e => {
+      if (!document.getElementById('eyeTracking').checked) return;
+      
+      const cx = e.clientX, cy = e.clientY;
+      
+      const left = {x:95, y:110};
+      const right = {x:225, y:110};
+      
+      const mapPupil = (center) => {
+        const svg = document.querySelector('.face svg');
+        const scaleX = faceRect.w / 320; 
+        const scaleY = faceRect.h / 200;
+        
+        const px = center.x * scaleX + faceRect.x;
+        const py = center.y * scaleY + faceRect.y;
+        
+        const dx = (cx - px); 
+        const dy = (cy - py);
+        const max = 8;
+        
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const nx = (len ? dx / len : 0) * Math.min(max, len);
+        const ny = (len ? dy / len : 0) * Math.min(max, len);
+        
+        return {nx, ny};
+      }
+      
+      const l = mapPupil(left);
+      const r = mapPupil(right);
+      
+      lpupil.setAttribute('cx', 95 + (l.nx / faceRect.w * 40));
+      lpupil.setAttribute('cy', 110 + (l.ny / faceRect.h * 40));
+      rpupil.setAttribute('cx', 225 + (r.nx / faceRect.w * 40));
+      rpupil.setAttribute('cy', 110 + (r.ny / faceRect.h * 40));
+    });
 
-  let reply;
-  switch(model) {
-    case 'gemini':      reply = await callGemini(prompt, key); break;
-    case 'groq-llama':  reply = await callGroq(prompt, key, 'llama-3.1-8b-instant'); break;
-    case 'groq-mixtral':reply = await callGroq(prompt, key, 'mixtral-8x7b-32768'); break;
-    case 'hf':          reply = await callHF(prompt, key); break;
-    case 'openrouter':  reply = await callOpenRouter(prompt, key); break;
-    case 'custom-api':  reply = await callCustomAPI(prompt, key); break;
-    case 'hf-space':    reply = await callHFSpace(prompt); break;
-    default: reply = '請選擇模型';
-  }
+    // --- 設備方向檢測 ---
+    let isDeviceOrientationSupported = false;
 
-  thinkEl.remove();
-  addMsg(reply, 'ai');
-  setFace('speaking');
+    function updatePupilsByOrientation(gamma, beta) {
+      if (!document.getElementById('eyeTracking').checked) return;
+      
+      gamma = Math.max(-90, Math.min(90, gamma));
+      
+      const maxHorizontalOffset = 10;
+      const horizontalOffset = (gamma / 90) * maxHorizontalOffset;
+      
+      const maxVerticalOffset = 6;
+      let verticalOffset = 0;
+      
+      if (beta > 45) {
+        verticalOffset = maxVerticalOffset;
+      } else if (beta < -45) {
+        verticalOffset = -maxVerticalOffset;
+      }
+      
+      lpupil.setAttribute('cx', 95 - horizontalOffset);
+      lpupil.setAttribute('cy', 110 + verticalOffset);
+      rpupil.setAttribute('cx', 225 - horizontalOffset);
+      rpupil.setAttribute('cy', 110 + verticalOffset);
+      
+      orientationStatus.textContent = `水平: ${gamma.toFixed(1)}° | 垂直: ${beta.toFixed(1)}°`;
+    }
 
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(reply);
-  u.lang = 'zh-TW';
-  u.onend = () => setFace('idle');
-  window.speechSynthesis.speak(u);
+    if (window.DeviceOrientationEvent) {
+      isDeviceOrientationSupported = true;
+      orientationStatus.textContent = '設備方向檢測已啟用';
+      
+      window.addEventListener('deviceorientation', (event) => {
+        if (event.gamma !== null && event.beta !== null) {
+          updatePupilsByOrientation(event.gamma, event.beta);
+        }
+      });
+    } else {
+      orientationStatus.textContent = '此設備不支援方向檢測';
+    }
 
-  sendBtn.disabled = false;
-}
+    // --- 語音辨識功能 ---
+    let recognition = null;
+    let recognizing = false;
 
-// ── Voice input ──
-micBtn.addEventListener('click', () => {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { alert('此瀏覽器不支援語音辨識'); return; }
-  const rec = new SR();
-  rec.lang = 'zh-TW';
-  micBtn.classList.add('listening');
-  setFace('listening');
-  rec.onresult = e => { userIn.value = e.results[0][0].transcript; handleSend(); };
-  rec.onend = () => { micBtn.classList.remove('listening'); };
-  rec.start();
-});
+    if(window.SpeechRecognition || window.webkitSpeechRecognition) {
+      const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new Rec();
+      
+      recognition.lang = 'zh-TW';
+      recognition.interimResults = true;
+      recognition.continuous = false;
 
-sendBtn.addEventListener('click', handleSend);
-userIn.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
-});
-userIn.addEventListener('input', () => {
-  userIn.style.height = 'auto';
-  userIn.style.height = Math.min(userIn.scrollHeight, 110) + 'px';
-});
+      recognition.onstart = () => {
+        recognizing = true; 
+        recStatus.textContent = '聆聽中…';
+        expressionSystem.setExpression('surprised');
+      };
+      
+      recognition.onend = () => {
+        recognizing = false; 
+        recStatus.textContent = '已停止';
+        expressionSystem.setExpression('normal');
+      };
+      
+      recognition.onerror = (e) => {
+        console.warn('rec error', e); 
+        recStatus.textContent = '辨識發生錯誤';
+        expressionSystem.setExpression('sad');
+      };
+      
+      let finalTranscript = '';
+      recognition.onresult = (ev) => {
+        let interim = '';
+        
+        for(let i = ev.resultIndex; i < ev.results.length; i++) {
+          const r = ev.results[i];
+          if(r.isFinal) 
+            finalTranscript += r[0].transcript;
+          else 
+            interim += r[0].transcript;
+        }
+        
+        textIn.value = (finalTranscript + interim).trim();
+        
+        if (Math.random() > 0.7) {
+          triggerBlushAnimation();
+        }
+      };
+    } else {
+      recStatus.textContent = '此裝置不支援語音辨識。';
+      recBtn.disabled = true; 
+      stopRecBtn.disabled = true;
+    }
 
-setFace('idle');
-</script>
+    recBtn.addEventListener('click', () => {
+      if(!recognition) return;
+      try { 
+        finalReset(); 
+        recognition.start(); 
+      } catch(e) {
+        console.warn(e);
+      }
+    });
+
+    stopRecBtn.addEventListener('click', () => {
+      if(!recognition) return;
+      recognition.stop();
+    });
+
+    function finalReset() {
+      recStatus.textContent = '準備中…請開始說話';
+    }
+
+    // --- 鍵盤快捷鍵 ---
+    textIn.addEventListener('keydown', e => {
+      if(e.key === 'Enter' && !e.ctrlKey) {
+        e.preventDefault(); 
+        handleSend(textIn.value);
+      }
+    });
+
+    // --- 初始化功能 ---
+    function initializeEnhancedFeatures() {
+      memorySystem.updateMemoryDisplay();
+      
+      // 初始化系統設定
+      const motionDetection = document.getElementById('motionDetection');
+      const gestureEnabled = document.getElementById('gestureEnabled');
+      const shakeDetection = document.getElementById('shakeDetection');
+      
+      motionDetectionSystem.isEnabled = motionDetection.checked;
+      gestureRecognitionSystem.isEnabled = gestureEnabled.checked;
+      shakeDetectionSystem.isEnabled = shakeDetection.checked;
+      
+      motionDetection.addEventListener('change', function() {
+        motionDetectionSystem.isEnabled = this.checked;
+        if (!this.checked) {
+          motionDetectionSystem.stopMotionDetection();
+        }
+      });
+      
+      gestureEnabled.addEventListener('change', function() {
+        gestureRecognitionSystem.isEnabled = this.checked;
+      });
+      
+      shakeDetection.addEventListener('change', function() {
+        shakeDetectionSystem.isEnabled = this.checked;
+      });
+      
+      // 初始化搖晃偵測
+      shakeDetectionSystem.init();
+      
+      setInterval(() => {
+        if (Math.random() > 0.7) {
+          expressionSystem.randomExpression();
+        }
+      }, 15000);
+      
+      document.getElementById('exportData').addEventListener('click', () => {
+        memorySystem.exportData();
+      });
+      
+      document.getElementById('importData').addEventListener('click', () => {
+        document.getElementById('importFile').click();
+      });
+      
+      document.getElementById('importFile').addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+          memorySystem.importData(e.target.files[0]);
+          e.target.value = '';
+        }
+      });
+      
+      document.getElementById('clearBtn').addEventListener('click', () => {
+        textIn.value = '';
+        robotReply.textContent = '機器人等待使用者輸入...';
+        keywordsEl.innerHTML = '';
+        expressionSystem.setExpression('normal');
+      });
+    }
+
+    // 定期臉頰動畫
+    setInterval(() => {
+      if (!leftBlush.classList.contains('blush-animation') && 
+          !leftBlush.classList.contains('blush-pulse-animation')) {
+        triggerBlushAnimation();
+      }
+    }, 8000);
+
+    // --- 頁面載入完成後初始化 ---
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeEnhancedFeatures();
+      
+      setTimeout(() => {
+        showNotification('LOOI 智慧互動版已準備完成！', 'success');
+        expressionSystem.setExpression('happy');
+        speakText('嗨！我是 Looi，現在我可以偵測你的動作、手勢，還能感應手機搖晃喔！');
+      }, 1000);
+    });
+  </script>
 </body>
 </html>
