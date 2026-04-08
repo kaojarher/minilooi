@@ -672,7 +672,7 @@ async function callGemini(text, key) {
   history.push({ role: 'user', parts: [{ text }] });
   try {
     const res = await fetch(
-      `https://www.google.com/search?q=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent%3Fkey%3D${key}`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${key}`,
       { method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ contents: history }) }
     );
